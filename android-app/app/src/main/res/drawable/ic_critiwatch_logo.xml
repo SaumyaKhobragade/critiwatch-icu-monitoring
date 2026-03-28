@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
 
     <path
         android:fillColor="@color/surface_card"
-        android:pathData="M54,16 L78,26 C81,27 84,30 84,34 V52 C84,69 73,85 54,93 C35,85 24,69 24,52 V34 C24,30 27,27 30,26 Z"
+        android:pathData="M48,10 L72,20 C75,21 78,24 78,28 V46 C78,63 67,79 48,87 C29,79 18,63 18,46 V28 C18,24 21,21 24,20 Z"
         android:strokeColor="@color/primary_accent"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
@@ -15,7 +15,7 @@
 
     <path
         android:fillColor="#00000000"
-        android:pathData="M32,56 L40,56 L45,47 L51,64 L57,52 L63,60 L72,60"
+        android:pathData="M26,50 L34,50 L39,41 L45,58 L51,46 L57,54 L66,54"
         android:strokeColor="@color/primary_accent"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
@@ -23,10 +23,10 @@
 
     <path
         android:fillColor="@color/status_stable"
-        android:pathData="M73,36h4v16h-4z" />
+        android:pathData="M67,30h4v16h-4z" />
 
     <path
         android:fillColor="@color/status_stable"
-        android:pathData="M67,42h16v4h-16z" />
+        android:pathData="M61,36h16v4h-16z" />
 
 </vector>

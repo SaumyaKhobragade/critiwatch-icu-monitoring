@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">CritiWatch</string>
+    <string name="splash_subtitle">ICU Vital Monitoring and Deterioration Prediction Platform</string>
+    <string name="splash_continue">Continue</string>
+    <string name="splash_logo_cd">CritiWatch app logo</string>
 
     <!-- Auth -->
     <string name="login_welcome">Welcome Back</string>

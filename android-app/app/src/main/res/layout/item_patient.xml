@@ -56,7 +56,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="@dimen/spacing_md"
-            android:background="@color/soft_neutral"
+            android:background="@color/border_color"
             app:layout_constraintTop_toBottomOf="@id/tvPatientMeta" />
 
         <LinearLayout
@@ -164,7 +164,7 @@
             android:id="@+id/dividerBottom"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/soft_neutral"
+            android:background="@color/border_color"
             app:layout_constraintTop_toBottomOf="@id/vitalsContainer" />
 
         <TextView

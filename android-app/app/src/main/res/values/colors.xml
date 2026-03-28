@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Palette -->
+    <!-- Core Palette -->
     <color name="primary_accent">#1F6FEB</color>
+    <color name="secondary_accent">#3B82F6</color>
+    <color name="info_accent">#0F766E</color>
     <color name="primary_variant">#1557C0</color>
     <color name="on_primary">#FFFFFF</color>
 
-    <!-- Background and Surface -->
+    <!-- Background and Surfaces -->
     <color name="background">#F5F7FA</color>
+    <color name="surface_secondary">#EEF2F6</color>
     <color name="surface_card">#FFFFFF</color>
     <color name="border_color">#D7DEE7</color>
 
-    <!-- Text Colors -->
+    <!-- Typography -->
     <color name="text_primary">#1F2937</color>
     <color name="text_secondary">#5B6472</color>
+    <color name="text_muted">#7B8794</color>
+    <color name="inverse_text">#FFFFFF</color>
 
     <!-- Status Colors -->
     <color name="status_stable">#2E8B57</color>
@@ -20,14 +25,20 @@
     <color name="status_critical">#C0392B</color>
     <color name="status_neutral">#6B7280</color>
 
-    <!-- Soft/Badge Colors -->
+    <!-- Soft Status Surfaces -->
     <color name="soft_blue">#DCEBFF</color>
     <color name="soft_green">#DDEFE5</color>
     <color name="soft_amber">#FCE9C7</color>
     <color name="soft_red">#F8D7D3</color>
-    <color name="soft_neutral">#F3F4F6</color>
+    <color name="soft_neutral">#EEF2F6</color>
 
-    <!-- Standard Android Colors -->
+    <!-- Interaction States -->
+    <color name="primary_pressed">#1557C0</color>
+    <color name="primary_disabled">#A7C4F6</color>
+    <color name="danger_pressed">#A83226</color>
+    <color name="danger_disabled">#E3A6A0</color>
+
+    <!-- Android Compatibility -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

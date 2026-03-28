@@ -55,7 +55,7 @@
         android:id="@+id/filterScrollView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/soft_neutral"
+        android:background="@color/surface_secondary"
         android:paddingVertical="@dimen/spacing_sm"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/headerCard">
@@ -75,7 +75,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"
                 android:text="All"
-                android:textColor="@color/white"
+                android:textColor="@color/inverse_text"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -133,6 +133,7 @@
 
     <!-- Bottom Navigation Placeholder -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
+        style="@style/Widget.CritiWatch.BottomNavigation"
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -141,3 +142,4 @@
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

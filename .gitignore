@@ -32,6 +32,12 @@ android-app/app/debug/
 android-app/*.jks
 android-app/*.keystore
 android-app/**/outputs/
+android-app/Temp_UI/
+android-app/app/src/androidTest/
+android-app/app/src/test/
+android-app/gradle/wrapper/
+android-app/gradlew
+android-app/gradlew.bat
 
 # ----------------------------
 # Python / FastAPI / tooling

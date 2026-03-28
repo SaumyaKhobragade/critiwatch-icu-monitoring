@@ -6,87 +6,79 @@
     android:layout_height="match_parent"
     android:id="@+id/main"
     android:background="@color/background"
-    android:padding="@dimen/spacing_xxl"
     tools:context="com.example.critiwatch.SplashActivity">
 
-    <!-- Branding Block -->
-    <LinearLayout
-        android:id="@+id/brandingBlock"
-        android:layout_width="match_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/splashContent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/ivIllustration"
+        android:paddingHorizontal="@dimen/spacing_xl"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed">
+        app:layout_constraintVertical_bias="0.46"
+        app:layout_constraintWidth_max="360dp">
+
+        <FrameLayout
+            android:id="@+id/logoContainer"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:background="@drawable/bg_splash_logo_container"
+            android:elevation="@dimen/card_elevation"
+            android:padding="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/splash_logo_cd"
+                android:src="@drawable/ic_critiwatch_logo" />
+        </FrameLayout>
 
         <TextView
-            android:id="@+id/tvLogoIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🏥"
-            android:textSize="64sp" />
-
-        <TextView
-            android:id="@+id/tvAppName"
+            android:id="@+id/tvAppTitle"
             style="@style/TextAppearance.CritiWatch.Header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:text="CritiWatch"
-            android:textSize="40sp" />
+            android:layout_marginTop="@dimen/spacing_xl"
+            android:text="@string/app_name"
+            android:textSize="36sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/logoContainer" />
 
         <TextView
             android:id="@+id/tvAppSubtitle"
             style="@style/TextAppearance.CritiWatch.Secondary"
-            android:layout_width="280dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:gravity="center"
-            android:text="ICU Vital Monitoring and Deterioration Prediction Platform"
-            android:textSize="16sp" />
-    </LinearLayout>
+            android:text="@string/splash_subtitle"
+            android:textSize="@dimen/text_body"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvAppTitle" />
 
-    <!-- Illustration Placeholder -->
-    <ImageView
-        android:id="@+id/ivIllustration"
-        android:layout_width="240dp"
-        android:layout_height="240dp"
-        android:layout_marginTop="32dp"
-        android:background="@drawable/bg_section_soft"
-        android:contentDescription="Splash Illustration"
-        android:padding="48dp"
-        android:src="@android:drawable/ic_menu_gallery"
-        app:layout_constraintBottom_toTopOf="@+id/tvSplashTagline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/brandingBlock"
-        app:tint="@color/primary_accent" />
+        <Button
+            android:id="@+id/btnContinue"
+            style="@style/Widget.CritiWatch.Button"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginTop="@dimen/spacing_xxl"
+            android:text="@string/splash_continue"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvAppSubtitle"
+            app:layout_constraintWidth_max="260dp"
+            app:layout_constraintWidth_min="180dp" />
 
-    <TextView
-        android:id="@+id/tvSplashTagline"
-        style="@style/TextAppearance.CritiWatch.Secondary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Smart mobile ICU monitoring with predictive alerts"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnGetStarted"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ivIllustration" />
-
-    <!-- CTA Button -->
-    <Button
-        android:id="@+id/btnGetStarted"
-        style="@style/Widget.CritiWatch.Button"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/button_height"
-        android:layout_marginTop="32dp"
-        android:text="Get Started"
-        android:textAllCaps="false"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSplashTagline" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

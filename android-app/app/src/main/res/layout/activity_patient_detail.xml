@@ -186,7 +186,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/spacing_lg"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                app:cardBackgroundColor="@color/soft_neutral"
+                app:cardBackgroundColor="@color/surface_secondary"
                 app:cardCornerRadius="@dimen/radius_lg"
                 app:cardElevation="0dp">
 
@@ -317,7 +317,7 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/soft_neutral" android:layout_marginVertical="@dimen/spacing_sm" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color" android:layout_marginVertical="@dimen/spacing_sm" />
 
                     <!-- Note Item 2 -->
                     <LinearLayout
@@ -367,19 +367,17 @@
 
                 <Button
                     android:id="@+id/btnAcknowledgeAlert"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.CritiWatch.Button.Secondary"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginBottom="@dimen/spacing_md"
-                    android:text="Acknowledge Alert"
-                    app:strokeColor="@color/primary_accent" />
+                    android:text="Acknowledge Alert" />
 
                 <Button
                     android:id="@+id/btnActivateResponse"
-                    style="@style/Widget.CritiWatch.Button"
+                    style="@style/Widget.CritiWatch.Button.Danger"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
-                    android:backgroundTint="@color/status_critical"
                     android:text="Activate Rapid Response" />
             </LinearLayout>
 
@@ -388,6 +386,7 @@
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
+        style="@style/Widget.CritiWatch.BottomNavigation"
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -396,3 +395,4 @@
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

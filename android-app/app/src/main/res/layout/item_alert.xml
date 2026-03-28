@@ -139,15 +139,15 @@
 
             <Button
                 android:id="@+id/btnMarkResolved"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.CritiWatch.Button.Secondary"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="Mark Resolved"
                 android:textAllCaps="false"
-                android:textSize="12sp"
-                app:strokeColor="@color/soft_blue" />
+                android:textSize="12sp" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
+

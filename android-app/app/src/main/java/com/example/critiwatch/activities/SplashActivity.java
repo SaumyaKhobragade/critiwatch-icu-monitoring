@@ -2,6 +2,7 @@ package com.example.critiwatch;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -18,15 +19,27 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+
+        View root = findViewById(R.id.main);
+        final int basePaddingLeft = root.getPaddingLeft();
+        final int basePaddingTop = root.getPaddingTop();
+        final int basePaddingRight = root.getPaddingRight();
+        final int basePaddingBottom = root.getPaddingBottom();
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(
+                    basePaddingLeft + systemBars.left,
+                    basePaddingTop + systemBars.top,
+                    basePaddingRight + systemBars.right,
+                    basePaddingBottom + systemBars.bottom
+            );
             return insets;
         });
 
-        Button btnGetStarted = findViewById(R.id.btnGetStarted);
-        if (btnGetStarted != null) {
-            btnGetStarted.setOnClickListener(v -> {
+        Button btnContinue = findViewById(R.id.btnContinue);
+        if (btnContinue != null) {
+            btnContinue.setOnClickListener(v -> {
                 Toast.makeText(this, "Opening login", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
@@ -34,7 +47,7 @@ public class SplashActivity extends AppCompatActivity {
         } else {
             Toast.makeText(
                     this,
-                    "Missing view id: btnGetStarted in activity_splash.xml",
+                    "Missing view id: btnContinue in activity_splash.xml",
                     Toast.LENGTH_LONG
             ).show();
         }

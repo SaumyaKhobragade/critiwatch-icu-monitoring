@@ -238,7 +238,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="@color/soft_neutral" />
+                            android:background="@color/border_color" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -266,7 +266,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="@color/soft_neutral" />
+                            android:background="@color/border_color" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -294,7 +294,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="@color/soft_neutral" />
+                            android:background="@color/border_color" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -367,7 +367,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="@color/soft_neutral" />
+                            android:background="@color/border_color" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -395,7 +395,7 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="@color/soft_neutral" />
+                            android:background="@color/border_color" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -424,17 +424,17 @@
 
                 <Button
                     android:id="@+id/btnLogout"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.CritiWatch.Button.Secondary"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
                     android:text="Logout from this session"
-                    android:textColor="@color/status_critical"
-                    app:strokeColor="@color/status_critical" />
+                    android:textColor="@color/status_critical" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
+        style="@style/Widget.CritiWatch.BottomNavigation"
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -443,3 +443,4 @@
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
