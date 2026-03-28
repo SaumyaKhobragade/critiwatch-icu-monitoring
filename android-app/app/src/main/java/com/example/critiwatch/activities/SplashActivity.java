@@ -1,6 +1,9 @@
 package com.example.critiwatch;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,5 +23,20 @@ public class SplashActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        Button btnGetStarted = findViewById(R.id.btnGetStarted);
+        if (btnGetStarted != null) {
+            btnGetStarted.setOnClickListener(v -> {
+                Toast.makeText(this, "Opening login", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginActivity.class));
+                finish();
+            });
+        } else {
+            Toast.makeText(
+                    this,
+                    "Missing view id: btnGetStarted in activity_splash.xml",
+                    Toast.LENGTH_LONG
+            ).show();
+        }
     }
 }

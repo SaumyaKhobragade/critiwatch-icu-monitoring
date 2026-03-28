@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Primary Palette -->
+    <color name="primary_accent">#1F6FEB</color>
+    <color name="primary_variant">#1557C0</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Background and Surface -->
+    <color name="background">#F5F7FA</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="border_color">#D7DEE7</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1F2937</color>
+    <color name="text_secondary">#5B6472</color>
+
+    <!-- Status Colors -->
+    <color name="status_stable">#2E8B57</color>
+    <color name="status_warning">#D97706</color>
+    <color name="status_critical">#C0392B</color>
+    <color name="status_neutral">#6B7280</color>
+
+    <!-- Soft/Badge Colors -->
+    <color name="soft_blue">#DCEBFF</color>
+    <color name="soft_green">#DDEFE5</color>
+    <color name="soft_amber">#FCE9C7</color>
+    <color name="soft_red">#F8D7D3</color>
+    <color name="soft_neutral">#F3F4F6</color>
+
+    <!-- Standard Android Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

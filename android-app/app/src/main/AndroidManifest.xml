@@ -10,41 +10,55 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Critiwatch">
+        android:theme="@style/Theme.CritiWatch">
+
         <activity
-            android:name=".NotificationDetailActivity"
-            android:exported="false" />
+            android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AddPatientActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SettingsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AlertsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".GraphHistoryActivity"
+            android:name=".LoginActivity"
             android:exported="false"
-            android:theme="@style/Theme.Critiwatch" />
-        <activity
-            android:name=".PatientDetailActivity"
-            android:exported="false" />
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".DashboardActivity"
             android:exported="false" />
+
         <activity
-            android:name=".SignupActivity"
+            android:name=".PatientDetailActivity"
             android:exported="false" />
+
         <activity
-            android:name=".LoginActivity"
+            android:name=".AlertsActivity"
             android:exported="false" />
+
         <activity
-            android:name=".SplashActivity"
+            android:name=".GraphHistoryActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".AddPatientActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".NotificationDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

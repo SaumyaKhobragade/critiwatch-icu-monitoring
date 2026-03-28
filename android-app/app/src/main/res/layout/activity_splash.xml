@@ -2,9 +2,91 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SplashActivity">
+    android:id="@+id/main"
+    android:background="@color/background"
+    android:padding="@dimen/spacing_xxl"
+    tools:context="com.example.critiwatch.SplashActivity">
+
+    <!-- Branding Block -->
+    <LinearLayout
+        android:id="@+id/brandingBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/ivIllustration"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <TextView
+            android:id="@+id/tvLogoIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏥"
+            android:textSize="64sp" />
+
+        <TextView
+            android:id="@+id/tvAppName"
+            style="@style/TextAppearance.CritiWatch.Header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="CritiWatch"
+            android:textSize="40sp" />
+
+        <TextView
+            android:id="@+id/tvAppSubtitle"
+            style="@style/TextAppearance.CritiWatch.Secondary"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:gravity="center"
+            android:text="ICU Vital Monitoring and Deterioration Prediction Platform"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Illustration Placeholder -->
+    <ImageView
+        android:id="@+id/ivIllustration"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_section_soft"
+        android:contentDescription="Splash Illustration"
+        android:padding="48dp"
+        android:src="@android:drawable/ic_menu_gallery"
+        app:layout_constraintBottom_toTopOf="@+id/tvSplashTagline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/brandingBlock"
+        app:tint="@color/primary_accent" />
+
+    <TextView
+        android:id="@+id/tvSplashTagline"
+        style="@style/TextAppearance.CritiWatch.Secondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Smart mobile ICU monitoring with predictive alerts"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@+id/btnGetStarted"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivIllustration" />
+
+    <!-- CTA Button -->
+    <Button
+        android:id="@+id/btnGetStarted"
+        style="@style/Widget.CritiWatch.Button"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginTop="32dp"
+        android:text="Get Started"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSplashTagline" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
