@@ -1,0 +1,16 @@
+[
+  {
+    "id": "P001",
+    "name": "Arjun Mehta",
+    "age": 62,
+    "bed": "ICU-01",
+    "status": "stable"
+  },
+  {
+    "id": "P002",
+    "name": "Neha Sharma",
+    "age": 54,
+    "bed": "ICU-02",
+    "status": "warning"
+  }
+]

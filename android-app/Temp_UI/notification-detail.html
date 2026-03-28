@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritiWatch - Critical Alert</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .notification-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #7F1D1D; /* Dark Red for Critical */
+            color: white;
+        }
+        .notification-header {
+            padding: var(--spacing-xl);
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .notification-icon {
+            font-size: 5rem;
+            margin-bottom: var(--spacing-lg);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .notification-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .notification-subtitle {
+            font-size: 1.125rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        .notification-content {
+            background-color: white;
+            color: var(--text-primary);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            padding: var(--spacing-xl);
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+        .patient-summary-card {
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+        }
+        .patient-name-large {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .patient-meta-large {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .alert-details {
+            margin-bottom: var(--spacing-xl);
+        }
+        .alert-detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        .alert-detail-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .alert-detail-value {
+            font-size: 1.125rem;
+            font-weight: 800;
+            color: var(--status-critical);
+        }
+        .notification-actions {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="notification-container">
+            <div class="notification-header">
+                <div class="notification-icon">🚨</div>
+                <h1 class="notification-title">Critical Alert</h1>
+                <p class="notification-subtitle">Acute Deterioration Risk</p>
+            </div>
+
+            <div class="notification-content">
+                <div class="patient-summary-card">
+                    <h2 class="patient-name-large">Sarah Johnson</h2>
+                    <p class="patient-meta-large">Bed ICU-04 • Female • 64y</p>
+                </div>
+
+                <div class="alert-details">
+                    <h3 class="card-title">Alert Parameters</h3>
+                    <div class="alert-detail-item">
+                        <span class="alert-detail-label">Heart Rate</span>
+                        <span class="alert-detail-value">132 BPM</span>
+                    </div>
+                    <div class="alert-detail-item">
+                        <span class="alert-detail-label">SpO2</span>
+                        <span class="alert-detail-value">86%</span>
+                    </div>
+                    <div class="alert-detail-item">
+                        <span class="alert-detail-label">Blood Pressure</span>
+                        <span class="alert-detail-value">85/55 mmHg</span>
+                    </div>
+                    <div class="alert-detail-item">
+                        <span class="alert-detail-label">Prediction Confidence</span>
+                        <span class="alert-detail-value" style="color: var(--accent-primary);">88%</span>
+                    </div>
+                </div>
+
+                <div class="notification-actions">
+                    <button class="btn btn-danger" style="height: 64px; font-size: 1.25rem;">Activate Rapid Response</button>
+                    <a href="patient-detail.html" class="btn btn-primary">View Full Patient Profile</a>
+                    <button class="btn btn-outline btn-acknowledge">Acknowledge Alert</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

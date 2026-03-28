@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritiWatch - History & Trends</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .history-header {
+            padding: var(--spacing-md);
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .date-range-selector {
+            padding: var(--spacing-md);
+            background-color: var(--card-bg);
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .date-chip {
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            background-color: var(--bg-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .date-chip.active {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        .graph-container {
+            padding: var(--spacing-md);
+        }
+        .graph-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .graph-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .graph-placeholder {
+            width: 100%;
+            height: 160px;
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .graph-line {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-primary);
+            opacity: 0.5;
+        }
+        .reading-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--spacing-md);
+        }
+        .reading-table th, .reading-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+        .reading-table th {
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .reading-table td {
+            color: var(--text-secondary);
+        }
+        .reading-table .value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <a href="patient-detail.html" class="nav-icon">←</a>
+            <div class="header-title">History & Trends</div>
+            <div class="nav-icon">📥</div>
+        </header>
+
+        <div class="history-header">
+            <h2 class="patient-name">Sarah Johnson</h2>
+            <p class="patient-meta">P102 • ICU Bay 4</p>
+        </div>
+
+        <div class="date-range-selector">
+            <div class="date-chip active">6 Hours</div>
+            <div class="date-chip">12 Hours</div>
+            <div class="date-chip">24 Hours</div>
+            <div class="date-chip">7 Days</div>
+            <div class="date-chip">Custom</div>
+        </div>
+
+        <div class="graph-container">
+            <div class="graph-card">
+                <div class="graph-title">
+                    <span>Heart Rate (BPM)</span>
+                    <span style="color: var(--status-critical);">132 Max</span>
+                </div>
+                <div class="graph-placeholder">
+                    [ Heart Rate Trend Graph ]
+                    <div class="graph-line" style="bottom: 60px; transform: rotate(-5deg);"></div>
+                </div>
+            </div>
+
+            <div class="graph-card">
+                <div class="graph-title">
+                    <span>SpO2 (%)</span>
+                    <span style="color: var(--status-critical);">86 Min</span>
+                </div>
+                <div class="graph-placeholder">
+                    [ SpO2 Trend Graph ]
+                    <div class="graph-line" style="bottom: 80px; transform: rotate(10deg); background-color: var(--status-critical);"></div>
+                </div>
+            </div>
+
+            <div class="graph-card">
+                <div class="graph-title">
+                    <span>Blood Pressure (mmHg)</span>
+                    <span style="color: var(--status-warning);">85/55 Min</span>
+                </div>
+                <div class="graph-placeholder">
+                    [ Blood Pressure Trend Graph ]
+                    <div class="graph-line" style="bottom: 50px; transform: rotate(-2deg); background-color: var(--status-warning);"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Recent Readings</h3>
+                <table class="reading-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>HR</th>
+                            <th>SpO2</th>
+                            <th>BP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>14:30</td>
+                            <td class="value">132</td>
+                            <td class="value" style="color: var(--status-critical);">86%</td>
+                            <td class="value">85/55</td>
+                        </tr>
+                        <tr>
+                            <td>14:15</td>
+                            <td class="value">128</td>
+                            <td class="value">88%</td>
+                            <td class="value">88/58</td>
+                        </tr>
+                        <tr>
+                            <td>14:00</td>
+                            <td class="value">124</td>
+                            <td class="value">90%</td>
+                            <td class="value">92/60</td>
+                        </tr>
+                        <tr>
+                            <td>13:45</td>
+                            <td class="value">118</td>
+                            <td class="value">92%</td>
+                            <td class="value">98/65</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-text mt-lg" style="width: 100%; text-align: center;">View Full History Log</button>
+            </div>
+        </div>
+
+        <nav class="nav-bar">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <span class="nav-icon">🔔</span>
+                <span>Alerts</span>
+            </a>
+            <a href="history.html" class="nav-item active">
+                <span class="nav-icon">📈</span>
+                <span>History</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

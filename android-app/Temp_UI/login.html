@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritiWatch - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            padding: var(--spacing-xl);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        .login-logo {
+            font-size: 3rem;
+            color: var(--accent-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .login-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+        .login-form {
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-md);
+            font-size: 0.875rem;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            color: var(--text-secondary);
+        }
+        .forgot-password {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .demo-link {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .demo-link a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">🏥</div>
+                <h1 class="login-title">Welcome Back</h1>
+                <p class="login-subtitle">Sign in to CritiWatch Clinical Portal</p>
+            </div>
+
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label class="label" for="username">Username or Email</label>
+                    <input class="input" type="text" id="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label class="label" for="password">Password</label>
+                    <input class="input" type="password" id="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="form-footer">
+                    <label class="remember-me">
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-lg">Login</button>
+            </form>
+
+            <div class="demo-link">
+                Don't have an account? <a href="#">Request Demo Access</a>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+# ----------------------------
+# Global OS / Editor artifacts
+# ----------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+
+# ----------------------------
+# IDE / Workspace
+# ----------------------------
+.idea/
+.vscode/
+*.iml
+
+# ----------------------------
+# Android / Gradle
+# ----------------------------
+android-app/.gradle/
+android-app/**/build/
+android-app/.idea/
+android-app/local.properties
+android-app/captures/
+android-app/.externalNativeBuild/
+android-app/.cxx/
+android-app/app/release/
+android-app/app/debug/
+android-app/*.jks
+android-app/*.keystore
+android-app/**/outputs/
+
+# ----------------------------
+# Python / FastAPI / tooling
+# ----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ----------------------------
+# Environments and secrets
+# ----------------------------
+.env
+.env.*
+!.env.example
+backend/.venv/
+backend/venv/
+venv/
+env/
+
+# ----------------------------
+# Logs and runtime files
+# ----------------------------
+*.log
+logs/
+*.pid
+
+# ----------------------------
+# Backend artifacts
+# ----------------------------
+backend/model_artifacts/*.pkl
+backend/model_artifacts/*.joblib
+backend/model_artifacts/*.onnx
+backend/model_artifacts/*.h5
+backend/model_artifacts/*.pt
+backend/model_artifacts/*.pth
+
+# Large data or notebook checkpoints
+*.ipynb_checkpoints
+backend/data/raw_datasets/
+*.csv.zip
+*.zip
+
+# ----------------------------
+# Node (if docs/frontend tooling is added later)
+# ----------------------------
+node_modules/
+dist/
+build/
+
+# Local config and database files
+local.properties
+*.db
+*.sqlite
+*.sqlite3

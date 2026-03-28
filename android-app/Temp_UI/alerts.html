@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritiWatch - Alerts</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .alerts-header {
+            padding: var(--spacing-md);
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alert-tabs {
+            padding: var(--spacing-md);
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            white-space: nowrap;
+            background-color: var(--bg-secondary);
+        }
+        .alert-tab {
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .alert-tab.active {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        .alert-list {
+            padding: var(--spacing-md);
+        }
+        .alert-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--status-neutral);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        .alert-card.critical { border-left-color: var(--status-critical); }
+        .alert-card.warning { border-left-color: var(--status-warning); }
+        
+        .alert-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .alert-patient {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .alert-type {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .alert-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .alert-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-title">Clinical Alerts</div>
+            <div class="badge badge-critical">3 Active</div>
+        </header>
+
+        <div class="alert-tabs">
+            <div class="alert-tab active">All</div>
+            <div class="alert-tab">Critical</div>
+            <div class="alert-tab">Warning</div>
+            <div class="alert-tab">Acknowledged</div>
+        </div>
+
+        <div class="alert-list">
+            <div class="alert-card critical">
+                <div class="alert-top">
+                    <div>
+                        <div class="alert-patient">Sarah Johnson</div>
+                        <div class="alert-type">Sustained Tachycardia</div>
+                    </div>
+                    <div class="alert-time">2m ago</div>
+                </div>
+                <p class="alert-desc">Heart rate exceeded 120 BPM for over 5 minutes. Current: 132 BPM.</p>
+                <div class="alert-actions">
+                    <a href="notification-detail.html" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.75rem;">View Details</a>
+                    <button class="btn btn-outline btn-acknowledge" style="padding: 8px 16px; font-size: 0.75rem;">Acknowledge</button>
+                </div>
+            </div>
+
+            <div class="alert-card critical">
+                <div class="alert-top">
+                    <div>
+                        <div class="alert-patient">Sarah Johnson</div>
+                        <div class="alert-type">Oxygen Desaturation</div>
+                    </div>
+                    <div class="alert-time">5m ago</div>
+                </div>
+                <p class="alert-desc">SpO2 dropped below 88%. Current: 86%.</p>
+                <div class="alert-actions">
+                    <a href="notification-detail.html" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.75rem;">View Details</a>
+                    <button class="btn btn-outline btn-acknowledge" style="padding: 8px 16px; font-size: 0.75rem;">Acknowledge</button>
+                </div>
+            </div>
+
+            <div class="alert-card warning">
+                <div class="alert-top">
+                    <div>
+                        <div class="alert-patient">Robert Chen</div>
+                        <div class="alert-type">Elevated Temperature</div>
+                    </div>
+                    <div class="alert-time">15m ago</div>
+                </div>
+                <p class="alert-desc">Temperature rising trend detected. Current: 102.8°F.</p>
+                <div class="alert-actions">
+                    <a href="notification-detail.html" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.75rem;">View Details</a>
+                    <button class="btn btn-outline btn-acknowledge" style="padding: 8px 16px; font-size: 0.75rem;">Acknowledge</button>
+                </div>
+            </div>
+
+            <div class="alert-card" style="opacity: 0.6;">
+                <div class="alert-top">
+                    <div>
+                        <div class="alert-patient">Elena Rodriguez</div>
+                        <div class="alert-type">Lead Disconnected</div>
+                    </div>
+                    <div class="alert-time">1h ago</div>
+                </div>
+                <p class="alert-desc">ECG Lead II disconnected. Reconnected by Nurse Rivera.</p>
+                <div class="alert-actions">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size: 0.75rem; background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-muted);" disabled>Acknowledged</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-bar">
+            <a href="dashboard.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="alerts.html" class="nav-item active">
+                <span class="nav-icon">🔔</span>
+                <span>Alerts</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>History</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

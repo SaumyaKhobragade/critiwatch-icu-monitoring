@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CritiWatch - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md);
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .search-bar {
+            padding: var(--spacing-md);
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            font-size: 0.875rem;
+            outline: none;
+        }
+        .filter-section {
+            padding: var(--spacing-md);
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-chip {
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .filter-chip.active {
+            background-color: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+        }
+        .summary-card {
+            background-color: var(--card-bg);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .summary-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .patient-list {
+            padding: var(--spacing-md);
+        }
+        .patient-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            color: inherit;
+        }
+        .patient-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .patient-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .patient-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .patient-vitals {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-top: 1px solid var(--bg-secondary);
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        .vital-item {
+            text-align: center;
+        }
+        .vital-item-label {
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .vital-item-value {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .patient-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .quick-actions {
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-title">Clinical Dashboard</div>
+            <div class="flex-row gap-sm">
+                <a href="profile.html" class="nav-icon">👤</a>
+                <a href="settings.html" class="nav-icon">⚙️</a>
+            </div>
+        </header>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search patient name or bed ID...">
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-chip active">All Patients</div>
+            <div class="filter-chip">Ward A</div>
+            <div class="filter-chip">Ward B</div>
+            <div class="filter-chip">ICU-1</div>
+            <div class="filter-chip">ICU-2</div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span class="summary-value">42</span>
+                <span class="summary-label">Total</span>
+            </div>
+            <div class="summary-card">
+                <span class="summary-value" style="color: var(--status-stable);">34</span>
+                <span class="summary-label">Stable</span>
+            </div>
+            <div class="summary-card">
+                <span class="summary-value" style="color: var(--status-warning);">5</span>
+                <span class="summary-label">Warning</span>
+            </div>
+            <div class="summary-card">
+                <span class="summary-value" style="color: var(--status-critical);">3</span>
+                <span class="summary-label">Critical</span>
+            </div>
+        </div>
+
+        <div class="patient-list">
+            <h3 class="card-title">Patient Monitoring List</h3>
+            
+            <a href="patient-detail.html" class="patient-card">
+                <div class="patient-info">
+                    <div>
+                        <div class="patient-name">Sarah Johnson</div>
+                        <div class="patient-meta">64y • Female • Bed ICU-04</div>
+                    </div>
+                    <span class="badge badge-critical">Critical</span>
+                </div>
+                <div class="patient-vitals">
+                    <div class="vital-item">
+                        <div class="vital-item-label">HR</div>
+                        <div class="vital-item-value">132</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">SpO2</div>
+                        <div class="vital-item-value">86%</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">BP</div>
+                        <div class="vital-item-value">85/55</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">RR</div>
+                        <div class="vital-item-value">30</div>
+                    </div>
+                </div>
+                <div class="patient-footer">
+                    <span>Last updated: 2 mins ago</span>
+                    <span style="color: var(--accent-primary); font-weight: 600;">View Details →</span>
+                </div>
+            </a>
+
+            <a href="patient-detail.html" class="patient-card">
+                <div class="patient-info">
+                    <div>
+                        <div class="patient-name">Robert Chen</div>
+                        <div class="patient-meta">52y • Male • Bed ICU-09</div>
+                    </div>
+                    <span class="badge badge-warning">Warning</span>
+                </div>
+                <div class="patient-vitals">
+                    <div class="vital-item">
+                        <div class="vital-item-label">HR</div>
+                        <div class="vital-item-value">108</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">SpO2</div>
+                        <div class="vital-item-value">94%</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">BP</div>
+                        <div class="vital-item-value">110/70</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">RR</div>
+                        <div class="vital-item-value">22</div>
+                    </div>
+                </div>
+                <div class="patient-footer">
+                    <span>Last updated: 5 mins ago</span>
+                    <span style="color: var(--accent-primary); font-weight: 600;">View Details →</span>
+                </div>
+            </a>
+
+            <a href="patient-detail.html" class="patient-card">
+                <div class="patient-info">
+                    <div>
+                        <div class="patient-name">Elena Rodriguez</div>
+                        <div class="patient-meta">45y • Female • Bed ICU-02</div>
+                    </div>
+                    <span class="badge badge-stable">Stable</span>
+                </div>
+                <div class="patient-vitals">
+                    <div class="vital-item">
+                        <div class="vital-item-label">HR</div>
+                        <div class="vital-item-value">72</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">SpO2</div>
+                        <div class="vital-item-value">98%</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">BP</div>
+                        <div class="vital-item-value">122/80</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-item-label">RR</div>
+                        <div class="vital-item-value">16</div>
+                    </div>
+                </div>
+                <div class="patient-footer">
+                    <span>Last updated: 12 mins ago</span>
+                    <span style="color: var(--accent-primary); font-weight: 600;">View Details →</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="quick-actions">
+            <a href="add-patient.html" class="btn btn-outline">Add New Patient</a>
+        </div>
+
+        <nav class="nav-bar">
+            <a href="dashboard.html" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <span class="nav-icon">🔔</span>
+                <span>Alerts</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span>History</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
