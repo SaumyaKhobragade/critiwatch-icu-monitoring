@@ -88,14 +88,22 @@
     <style name="Widget.CritiWatch.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
         <item name="itemIconTint">@color/bottom_nav_item_colors</item>
         <item name="itemTextColor">@color/bottom_nav_item_colors</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.CritiWatch.BottomNavLabel</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.CritiWatch.BottomNavLabel</item>
         <item name="itemRippleColor">@color/secondary_accent</item>
         <item name="labelVisibilityMode">labeled</item>
         <item name="itemHorizontalTranslationEnabled">false</item>
-        <item name="itemPaddingTop">4dp</item>
-        <item name="itemPaddingBottom">2dp</item>
-        <item name="itemIconSize">20dp</item>
+        <item name="itemPaddingTop">3dp</item>
+        <item name="itemPaddingBottom">1dp</item>
+        <item name="itemIconSize">19dp</item>
+        <item name="android:minHeight">60dp</item>
         <item name="android:background">@drawable/bg_bottom_navigation</item>
         <item name="android:elevation">8dp</item>
+    </style>
+
+    <style name="TextAppearance.CritiWatch.BottomNavLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
 </resources>

@@ -344,7 +344,7 @@
 
             <Button
                 android:id="@+id/btnCancel"
-                style="@style/Widget.CritiWatch.Button.Secondary"
+                style="@style/Widget.CritiWatch.Button.Danger"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
                 android:text="Cancel"
