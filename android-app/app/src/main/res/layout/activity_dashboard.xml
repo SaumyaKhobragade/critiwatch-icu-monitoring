@@ -252,7 +252,7 @@
                 android:text="@string/patient_list"
                 android:textSize="@dimen/text_subhead"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/summaryGrid" />
+                app:layout_constraintTop_toBottomOf="@id/btnAddPatient" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvPatients"
@@ -276,7 +276,7 @@
                 android:text="@string/add_patient"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/rvPatients" />
+                app:layout_constraintTop_toBottomOf="@id/summaryGrid" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

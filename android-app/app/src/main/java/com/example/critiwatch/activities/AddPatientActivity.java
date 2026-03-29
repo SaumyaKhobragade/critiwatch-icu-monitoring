@@ -30,7 +30,9 @@ public class AddPatientActivity extends AppCompatActivity {
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            int bottomInset = Math.max(systemBars.bottom, ime.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, bottomInset);
             return insets;
         });
         setupSexSpinner();

@@ -2,7 +2,6 @@ package com.example.critiwatch;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,11 +51,6 @@ public class ProfileActivity extends AppCompatActivity {
             ivEditProfile.setOnClickListener(v ->
                     Toast.makeText(this, "Edit profile not implemented yet", Toast.LENGTH_SHORT).show()
             );
-        }
-
-        Button btnLogout = findViewById(R.id.btnLogout);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> logoutUser());
         }
 
         setupBottomNavigation();
@@ -141,12 +135,6 @@ public class ProfileActivity extends AppCompatActivity {
         }
         String last = parts[parts.length - 1].substring(0, 1).toUpperCase();
         return first + last;
-    }
-
-    private void logoutUser() {
-        sessionManager.clearSession();
-        Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
-        openLoginAndClearTask();
     }
 
     private void openLoginAndClearTask() {

@@ -423,12 +423,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <Button
-                    android:id="@+id/btnLogout"
-                    style="@style/Widget.CritiWatch.Button.Danger"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/button_height"
-                    android:text="Logout from this session" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
