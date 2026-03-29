@@ -823,11 +823,6 @@ CritiWatch/
 │   ├── DATABASE_SCHEMA.md
 │   └── SCREENSHOTS/
 │
-├── assets/
-│   ├── app-logo/
-│   ├── icons/
-│   └── demo-images/
-│
 ├── .gitignore
 ├── LICENSE
 └── README.md
