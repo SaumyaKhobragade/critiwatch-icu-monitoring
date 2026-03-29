@@ -321,16 +321,6 @@ public class DashboardActivity extends AppCompatActivity {
     private void openPatientDetail(Patient patient) {
         Intent intent = new Intent(this, PatientDetailActivity.class);
         intent.putExtra(Constants.EXTRA_PATIENT_ID, patient.getId());
-        intent.putExtra(Constants.EXTRA_PATIENT_NAME, patient.getName());
-        intent.putExtra(Constants.EXTRA_PATIENT_AGE, patient.getAge());
-        intent.putExtra(Constants.EXTRA_PATIENT_SEX, patient.getSex());
-        intent.putExtra(Constants.EXTRA_PATIENT_BED, patient.getBedNumber());
-        intent.putExtra(Constants.EXTRA_PATIENT_RISK, patient.getRiskLevel());
-        intent.putExtra(Constants.EXTRA_PATIENT_HEART_RATE, patient.getHeartRate());
-        intent.putExtra(Constants.EXTRA_PATIENT_SPO2, patient.getSpo2());
-        intent.putExtra(Constants.EXTRA_PATIENT_BP, patient.getBloodPressure());
-        intent.putExtra(Constants.EXTRA_PATIENT_RR, patient.getRespiratoryRate());
-        intent.putExtra(Constants.EXTRA_PATIENT_TEMP, patient.getTemperature());
         startActivity(intent);
     }
 }

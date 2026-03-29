@@ -31,6 +31,10 @@ public class AlertRepository {
         return alertDao.getAlertById(alertId);
     }
 
+    public AlertItem getLatestAlertByPatientId(int patientId) {
+        return alertDao.getLatestAlertByPatientId(patientId);
+    }
+
     public boolean acknowledgeAlert(int alertId) {
         return alertDao.acknowledgeAlert(alertId) > 0;
     }

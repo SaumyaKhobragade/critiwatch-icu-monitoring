@@ -16,11 +16,14 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.critiwatch.database.DatabaseSeeder;
+import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.utils.Constants;
+import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 
 import java.util.Locale;
@@ -29,6 +32,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
 
     private AlertRepository alertRepository;
     private PatientRepository patientRepository;
+    private VitalDao vitalDao;
 
     private String patientId;
     private String patientName;
@@ -45,6 +49,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
     private String alertTimestamp;
     private String alertDescription;
     private int predictionConfidence;
+    private VitalSign latestVital;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
         DatabaseSeeder.seedIfEmpty(this);
         alertRepository = new AlertRepository(this);
         patientRepository = new PatientRepository(this);
+        vitalDao = new VitalDao(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -61,119 +67,86 @@ public class NotificationDetailActivity extends AppCompatActivity {
             return insets;
         });
 
-        readIntentData();
+        if (!readAndLoadData()) {
+            return;
+        }
+
         bindAlertHeader();
         bindPatientSummary();
         bindAlertParameters();
         setupActions();
     }
 
-    private void readIntentData() {
+    private boolean readAndLoadData() {
         Intent source = getIntent();
-
-        patientId = source.getStringExtra(Constants.EXTRA_PATIENT_ID);
-        patientName = source.getStringExtra(Constants.EXTRA_PATIENT_NAME);
-        patientAge = source.getIntExtra(Constants.EXTRA_PATIENT_AGE, 64);
-        patientSex = source.getStringExtra(Constants.EXTRA_PATIENT_SEX);
-        patientBed = source.getStringExtra(Constants.EXTRA_PATIENT_BED);
-        patientRisk = source.getStringExtra(Constants.EXTRA_PATIENT_RISK);
-
-        alertId = source.getStringExtra(Constants.EXTRA_ALERT_ID);
-        alertType = source.getStringExtra(Constants.EXTRA_ALERT_TYPE);
-        alertSeverity = source.getStringExtra(Constants.EXTRA_ALERT_SEVERITY);
-        alertValue = source.getStringExtra(Constants.EXTRA_ALERT_VALUE);
-        alertUnit = source.getStringExtra(Constants.EXTRA_ALERT_UNIT);
-        alertTimestamp = source.getStringExtra(Constants.EXTRA_ALERT_TIMESTAMP);
-        alertDescription = source.getStringExtra(Constants.EXTRA_ALERT_DESCRIPTION);
-        predictionConfidence = source.getIntExtra(Constants.EXTRA_PREDICTION_CONFIDENCE, 88);
-
-        loadAlertFromDatabaseIfPossible();
-        loadPatientFromDatabaseIfPossible();
-
-        if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "1";
-        }
-        if (patientName == null || patientName.trim().isEmpty()) {
-            patientName = "Sarah Johnson";
-        }
-        if (patientSex == null || patientSex.trim().isEmpty()) {
-            patientSex = "Female";
-        }
-        if (patientBed == null || patientBed.trim().isEmpty()) {
-            patientBed = "ICU-04";
-        }
-        if (patientRisk == null || patientRisk.trim().isEmpty()) {
-            patientRisk = Constants.RISK_WARNING;
-        }
-
+        alertId = source == null ? null : source.getStringExtra(Constants.EXTRA_ALERT_ID);
         if (alertId == null || alertId.trim().isEmpty()) {
-            alertId = "1";
+            Toast.makeText(this, "Missing alert id", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
         }
-        if (alertType == null || alertType.trim().isEmpty()) {
-            alertType = "Prediction Alert";
+
+        if (!loadAlertFromDatabase(parseId(alertId))) {
+            Toast.makeText(this, "Alert not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
         }
-        if (alertSeverity == null || alertSeverity.trim().isEmpty()) {
-            alertSeverity = patientRisk;
-        }
-        if (alertValue == null || alertValue.trim().isEmpty()) {
-            alertValue = "132";
-        }
-        if (alertUnit == null || alertUnit.trim().isEmpty()) {
-            alertUnit = "BPM";
-        }
-        if (alertTimestamp == null || alertTimestamp.trim().isEmpty()) {
-            alertTimestamp = "Just now";
-        }
-        if (alertDescription == null || alertDescription.trim().isEmpty()) {
-            alertDescription = "Significant deterioration trend observed. Immediate bedside review advised.";
-        }
+
+        loadPatientFromDatabaseIfPossible();
+        return true;
     }
 
-    private void loadAlertFromDatabaseIfPossible() {
-        int id = parseId(alertId);
+    private boolean loadAlertFromDatabase(int id) {
         if (id <= 0) {
-            return;
+            return false;
         }
 
         AlertItem alert = alertRepository.getAlertById(id);
         if (alert == null) {
-            return;
+            return false;
         }
 
         alertId = alert.getId();
-        alertType = alert.getType();
-        alertSeverity = alert.getSeverity();
-        alertValue = alert.getValue();
-        alertUnit = alert.getUnit();
-        alertTimestamp = alert.getTimestamp();
-        alertDescription = alert.getDescription();
-        predictionConfidence = alert.getPredictionConfidence();
+        alertType = safeOrDash(alert.getType());
+        alertSeverity = safeOrDefault(alert.getSeverity(), Constants.RISK_WARNING);
+        alertValue = safeOrDash(alert.getValue());
+        alertUnit = safeOrEmpty(alert.getUnit());
+        alertTimestamp = safeOrDash(alert.getTimestamp());
+        alertDescription = safeOrDefault(alert.getDescription(), "No alert description available.");
+        predictionConfidence = Math.max(0, alert.getPredictionConfidence());
 
         patientId = alert.getPatientId();
-        patientName = alert.getPatientName();
+        patientName = safeOrEmpty(alert.getPatientName());
         patientAge = alert.getPatientAge();
-        patientSex = alert.getPatientSex();
-        patientBed = alert.getPatientBed();
-        patientRisk = alert.getPatientRisk();
+        patientSex = safeOrEmpty(alert.getPatientSex());
+        patientBed = safeOrEmpty(alert.getPatientBed());
+        patientRisk = safeOrDefault(alert.getPatientRisk(), alertSeverity);
+        return true;
     }
 
     private void loadPatientFromDatabaseIfPossible() {
         int id = parseId(patientId);
         if (id <= 0) {
+            patientName = safeOrDefault(patientName, "Unknown Patient");
+            patientSex = safeOrDefault(patientSex, "Unknown");
+            patientBed = safeOrDefault(patientBed, "-");
+            if (patientAge <= 0) {
+                patientAge = 0;
+            }
             return;
         }
 
         Patient patient = patientRepository.getPatientByIdWithLatestData(id);
-        if (patient == null) {
-            return;
+        if (patient != null) {
+            patientId = patient.getId();
+            patientName = safeOrDefault(patient.getName(), patientName);
+            patientAge = patient.getAge();
+            patientSex = safeOrDefault(patient.getSex(), patientSex);
+            patientBed = safeOrDefault(patient.getBedNumber(), patientBed);
+            patientRisk = safeOrDefault(patient.getRiskLevel(), patientRisk);
         }
 
-        patientId = patient.getId();
-        patientName = patient.getName();
-        patientAge = patient.getAge();
-        patientSex = patient.getSex();
-        patientBed = patient.getBedNumber();
-        patientRisk = patient.getRiskLevel();
+        latestVital = vitalDao.getLatestVitalByPatientId(id);
     }
 
     private void bindAlertHeader() {
@@ -187,7 +160,8 @@ public class NotificationDetailActivity extends AppCompatActivity {
             tvAlertTitle.setTextColor(ContextCompat.getColor(this, getSeverityColor(alertSeverity)));
         }
         if (tvAlertSubtitle != null) {
-            tvAlertSubtitle.setText(alertType + " • " + alertTimestamp + " • " + alertId);
+            String subtitleTime = DateTimeUtils.toRelativeTime(alertTimestamp);
+            tvAlertSubtitle.setText(alertType + " • " + subtitleTime + " • #" + alertId);
         }
         if (tvAlertDescription != null) {
             tvAlertDescription.setText(alertDescription);
@@ -208,10 +182,12 @@ public class NotificationDetailActivity extends AppCompatActivity {
         TextView tvPatientMetaLarge = findViewById(R.id.tvPatientMetaLarge);
 
         if (tvPatientNameLarge != null) {
-            tvPatientNameLarge.setText(patientName);
+            tvPatientNameLarge.setText(safeOrDefault(patientName, "Unknown Patient"));
         }
         if (tvPatientMetaLarge != null) {
-            tvPatientMetaLarge.setText("Bed " + patientBed + " • " + patientSex + " • " + patientAge + "y");
+            String ageText = patientAge > 0 ? patientAge + "y" : "Age N/A";
+            tvPatientMetaLarge.setText("Bed " + safeOrDefault(patientBed, "-") + " • "
+                    + safeOrDefault(patientSex, "Unknown") + " • " + ageText);
         }
     }
 
@@ -221,27 +197,41 @@ public class NotificationDetailActivity extends AppCompatActivity {
         TextView tvAlertBPValue = findViewById(R.id.tvAlertBPValue);
         TextView tvAlertConfidenceValue = findViewById(R.id.tvAlertConfidenceValue);
 
+        String hrText = latestVital != null && latestVital.getHeartRate() > 0
+                ? latestVital.getHeartRate() + " BPM"
+                : "--";
+        String spo2Text = latestVital != null && latestVital.getSpo2() > 0
+                ? latestVital.getSpo2() + "%"
+                : "--";
+        String bpText = latestVital != null && latestVital.getBloodPressure() != null && !latestVital.getBloodPressure().trim().isEmpty()
+                ? latestVital.getBloodPressure() + " mmHg"
+                : "--";
+
+        String alertTypeLower = alertType.toLowerCase(Locale.US);
+        String alertValueWithUnit = (alertValue + " " + alertUnit).trim();
+        if (alertTypeLower.contains("heart")) {
+            hrText = alertValueWithUnit;
+        } else if (alertTypeLower.contains("spo2")) {
+            spo2Text = alertValueWithUnit;
+        } else if (alertTypeLower.contains("blood pressure")) {
+            bpText = alertValueWithUnit;
+        }
+
         int severityColor = ContextCompat.getColor(this, getSeverityColor(alertSeverity));
         if (tvAlertHRValue != null) {
-            tvAlertHRValue.setText(alertType.toLowerCase(Locale.US).contains("heart")
-                    ? alertValue + " " + alertUnit
-                    : "126 BPM");
+            tvAlertHRValue.setText(hrText);
             tvAlertHRValue.setTextColor(severityColor);
         }
         if (tvAlertSpO2Value != null) {
-            tvAlertSpO2Value.setText(alertType.toLowerCase(Locale.US).contains("spo2")
-                    ? alertValue + alertUnit
-                    : "86%");
+            tvAlertSpO2Value.setText(spo2Text);
             tvAlertSpO2Value.setTextColor(severityColor);
         }
         if (tvAlertBPValue != null) {
-            tvAlertBPValue.setText(alertType.toLowerCase(Locale.US).contains("blood pressure")
-                    ? alertValue + " " + alertUnit
-                    : "85/55 mmHg");
+            tvAlertBPValue.setText(bpText);
             tvAlertBPValue.setTextColor(severityColor);
         }
         if (tvAlertConfidenceValue != null) {
-            tvAlertConfidenceValue.setText(predictionConfidence + "%");
+            tvAlertConfidenceValue.setText(predictionConfidence > 0 ? predictionConfidence + "%" : "--");
         }
     }
 
@@ -265,27 +255,30 @@ public class NotificationDetailActivity extends AppCompatActivity {
                 if (id > 0) {
                     alertRepository.acknowledgeAlert(id);
                 }
-                Toast.makeText(this, "Alert " + alertId + " acknowledged", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, AlertsActivity.class));
+                Toast.makeText(this, "Alert #" + alertId + " acknowledged", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, AlertsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
             });
         }
 
         Button btnActivateResponse = findViewById(R.id.btnActivateResponse);
         if (btnActivateResponse != null) {
             btnActivateResponse.setOnClickListener(v ->
-                    Toast.makeText(this, "Rapid response team notified (mock)", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Rapid response workflow will be wired next", Toast.LENGTH_SHORT).show()
             );
         }
     }
 
     private void openPatientProfile() {
+        int id = parseId(patientId);
+        if (id <= 0) {
+            Toast.makeText(this, "Patient id unavailable", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent(this, PatientDetailActivity.class);
         intent.putExtra(Constants.EXTRA_PATIENT_ID, patientId);
-        intent.putExtra(Constants.EXTRA_PATIENT_NAME, patientName);
-        intent.putExtra(Constants.EXTRA_PATIENT_AGE, patientAge);
-        intent.putExtra(Constants.EXTRA_PATIENT_SEX, patientSex);
-        intent.putExtra(Constants.EXTRA_PATIENT_BED, patientBed);
-        intent.putExtra(Constants.EXTRA_PATIENT_RISK, patientRisk);
         startActivity(intent);
     }
 
@@ -308,5 +301,17 @@ public class NotificationDetailActivity extends AppCompatActivity {
         } catch (NumberFormatException ignored) {
             return -1;
         }
+    }
+
+    private String safeOrDefault(String value, String fallback) {
+        return (value == null || value.trim().isEmpty()) ? fallback : value;
+    }
+
+    private String safeOrDash(String value) {
+        return safeOrDefault(value, "--");
+    }
+
+    private String safeOrEmpty(String value) {
+        return safeOrDefault(value, "");
     }
 }

@@ -19,9 +19,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.database.VitalDao;
+import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
+import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
 import com.example.critiwatch.utils.Constants;
@@ -33,6 +35,7 @@ import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
 
+    private AlertRepository alertRepository;
     private PatientRepository patientRepository;
     private PredictionRepository predictionRepository;
     private VitalDao vitalDao;
@@ -48,7 +51,9 @@ public class PatientDetailActivity extends AppCompatActivity {
     private String bloodPressure;
     private int respiratoryRate;
     private double temperature;
+    private String patientCreatedAt;
     private Prediction latestPrediction;
+    private AlertItem latestAlert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +61,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_patient_detail);
         DatabaseSeeder.seedIfEmpty(this);
+        alertRepository = new AlertRepository(this);
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
         vitalDao = new VitalDao(this);
@@ -66,49 +72,56 @@ public class PatientDetailActivity extends AppCompatActivity {
             return insets;
         });
 
-        readPatientExtras();
-        loadPatientDataFromDatabase();
+        if (!readPatientIdFromIntent()) {
+            return;
+        }
+        if (!loadPatientDataFromDatabase()) {
+            return;
+        }
         bindPatientHeader();
         bindVitalCards();
         setupClickActions();
         setupBottomNavigation();
     }
 
-    private void readPatientExtras() {
+    private boolean readPatientIdFromIntent() {
         Intent source = getIntent();
-        patientId = source.getStringExtra(Constants.EXTRA_PATIENT_ID);
-        patientName = source.getStringExtra(Constants.EXTRA_PATIENT_NAME);
-        patientAge = source.getIntExtra(Constants.EXTRA_PATIENT_AGE, 64);
-        patientSex = source.getStringExtra(Constants.EXTRA_PATIENT_SEX);
-        patientBed = source.getStringExtra(Constants.EXTRA_PATIENT_BED);
-        patientRisk = source.getStringExtra(Constants.EXTRA_PATIENT_RISK);
-        heartRate = source.getIntExtra(Constants.EXTRA_PATIENT_HEART_RATE, 132);
-        spo2 = source.getIntExtra(Constants.EXTRA_PATIENT_SPO2, 86);
-        bloodPressure = source.getStringExtra(Constants.EXTRA_PATIENT_BP);
-        respiratoryRate = source.getIntExtra(Constants.EXTRA_PATIENT_RR, 28);
-        temperature = source.getDoubleExtra(Constants.EXTRA_PATIENT_TEMP, 38.2);
-
+        patientId = source == null ? null : source.getStringExtra(Constants.EXTRA_PATIENT_ID);
         if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "1";
+            Toast.makeText(this, "Missing patient id", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
         }
+        return true;
     }
 
-    private void loadPatientDataFromDatabase() {
+    private boolean loadPatientDataFromDatabase() {
         int id = parseId(patientId);
-        Patient patient = patientRepository.getPatientByIdWithLatestData(id);
-        if (patient != null) {
-            patientId = patient.getId();
-            patientName = patient.getName();
-            patientAge = patient.getAge();
-            patientSex = patient.getSex();
-            patientBed = patient.getBedNumber();
-            patientRisk = patient.getRiskLevel();
-            heartRate = patient.getHeartRate();
-            spo2 = patient.getSpo2();
-            bloodPressure = patient.getBloodPressure();
-            respiratoryRate = patient.getRespiratoryRate();
-            temperature = patient.getTemperature();
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid patient id", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
         }
+
+        Patient patient = patientRepository.getPatientByIdWithLatestData(id);
+        if (patient == null) {
+            Toast.makeText(this, "Patient not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
+        }
+
+        patientId = patient.getId();
+        patientName = patient.getName();
+        patientAge = patient.getAge();
+        patientSex = patient.getSex();
+        patientBed = patient.getBedNumber();
+        patientRisk = patient.getRiskLevel();
+        patientCreatedAt = patient.getCreatedAt();
+        heartRate = patient.getHeartRate();
+        spo2 = patient.getSpo2();
+        bloodPressure = patient.getBloodPressure();
+        respiratoryRate = patient.getRespiratoryRate();
+        temperature = patient.getTemperature();
 
         VitalSign latestVital = vitalDao.getLatestVitalByPatientId(id);
         if (latestVital != null) {
@@ -124,6 +137,11 @@ public class PatientDetailActivity extends AppCompatActivity {
             patientRisk = latestPrediction.getRiskLevel();
         }
 
+        latestAlert = alertRepository.getLatestAlertByPatientId(id);
+        if (latestAlert != null && (patientRisk == null || patientRisk.trim().isEmpty())) {
+            patientRisk = latestAlert.getSeverity();
+        }
+
         if (patientName == null || patientName.trim().isEmpty()) {
             patientName = "Unknown Patient";
         }
@@ -137,8 +155,10 @@ public class PatientDetailActivity extends AppCompatActivity {
             patientRisk = Constants.RISK_WARNING;
         }
         if (bloodPressure == null || bloodPressure.trim().isEmpty()) {
-            bloodPressure = "0/0";
+            bloodPressure = "--/--";
         }
+
+        return true;
     }
 
     private void bindPatientHeader() {
@@ -165,6 +185,8 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (tvAdmittedChip != null) {
             if (latestPrediction != null && latestPrediction.getCreatedAt() != null) {
                 tvAdmittedChip.setText("Updated: " + DateTimeUtils.toRelativeTime(latestPrediction.getCreatedAt()));
+            } else if (patientCreatedAt != null && !patientCreatedAt.trim().isEmpty()) {
+                tvAdmittedChip.setText("Admitted: " + DateTimeUtils.toRelativeTime(patientCreatedAt));
             } else {
                 tvAdmittedChip.setText(getMockAdmissionText(patientRisk));
             }
@@ -188,6 +210,9 @@ public class PatientDetailActivity extends AppCompatActivity {
             if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
                 tvAlertBannerMessage.setText(latestPrediction.getSummary());
                 tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(patientRisk)));
+            } else if (latestAlert != null && latestAlert.getDescription() != null && !latestAlert.getDescription().trim().isEmpty()) {
+                tvAlertBannerMessage.setText(latestAlert.getDescription());
+                tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(latestAlert.getSeverity())));
             } else if (Constants.RISK_CRITICAL.equalsIgnoreCase(patientRisk)) {
                 tvAlertBannerMessage.setText("CRITICAL: High deterioration risk detected. Sepsis protocol review recommended.");
                 tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, R.color.status_critical));
@@ -300,9 +325,7 @@ public class PatientDetailActivity extends AppCompatActivity {
 
         Button btnAcknowledgeAlert = findViewById(R.id.btnAcknowledgeAlert);
         if (btnAcknowledgeAlert != null) {
-            btnAcknowledgeAlert.setOnClickListener(v ->
-                    Toast.makeText(this, "Alert acknowledged for " + patientName, Toast.LENGTH_SHORT).show()
-            );
+            btnAcknowledgeAlert.setOnClickListener(v -> acknowledgeLatestAlert());
         }
 
         Button btnAddNote = findViewById(R.id.btnAddNote);
@@ -315,6 +338,25 @@ public class PatientDetailActivity extends AppCompatActivity {
         View llAlertBanner = findViewById(R.id.llAlertBanner);
         if (llAlertBanner != null) {
             llAlertBanner.setOnClickListener(v -> openAlertDetail());
+        }
+    }
+
+    private void acknowledgeLatestAlert() {
+        if (latestAlert == null) {
+            Toast.makeText(this, "No active alert available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int id = parseId(latestAlert.getId());
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid alert id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean success = alertRepository.acknowledgeAlert(id);
+        Toast.makeText(this, success ? "Alert acknowledged" : "Unable to acknowledge alert", Toast.LENGTH_SHORT).show();
+        if (success) {
+            latestAlert = alertRepository.getLatestAlertByPatientId(parseId(patientId));
         }
     }
 
@@ -361,22 +403,13 @@ public class PatientDetailActivity extends AppCompatActivity {
     }
 
     private void openAlertDetail() {
-        Intent intent = new Intent(this, NotificationDetailActivity.class);
-        intent.putExtra(Constants.EXTRA_PATIENT_ID, patientId);
-        intent.putExtra(Constants.EXTRA_PATIENT_NAME, patientName);
-        intent.putExtra(Constants.EXTRA_PATIENT_AGE, patientAge);
-        intent.putExtra(Constants.EXTRA_PATIENT_SEX, patientSex);
-        intent.putExtra(Constants.EXTRA_PATIENT_BED, patientBed);
-        intent.putExtra(Constants.EXTRA_PATIENT_RISK, patientRisk);
+        if (latestAlert == null) {
+            Toast.makeText(this, "No alert available for this patient", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        intent.putExtra(Constants.EXTRA_ALERT_ID, "ALT-" + patientId);
-        intent.putExtra(Constants.EXTRA_ALERT_TYPE, "Prediction Alert");
-        intent.putExtra(Constants.EXTRA_ALERT_SEVERITY, patientRisk);
-        intent.putExtra(Constants.EXTRA_ALERT_VALUE, String.valueOf(heartRate));
-        intent.putExtra(Constants.EXTRA_ALERT_UNIT, "BPM");
-        intent.putExtra(Constants.EXTRA_ALERT_TIMESTAMP, "Just now");
-        intent.putExtra(Constants.EXTRA_ALERT_DESCRIPTION, "Rapid deterioration risk detected from combined vital trends.");
-        intent.putExtra(Constants.EXTRA_PREDICTION_CONFIDENCE, Constants.RISK_CRITICAL.equalsIgnoreCase(patientRisk) ? 92 : 78);
+        Intent intent = new Intent(this, NotificationDetailActivity.class);
+        intent.putExtra(Constants.EXTRA_ALERT_ID, latestAlert.getId());
         startActivity(intent);
     }
 
@@ -398,8 +431,6 @@ public class PatientDetailActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_history) {
                 Intent intent = new Intent(this, GraphHistoryActivity.class);
                 intent.putExtra(Constants.EXTRA_PATIENT_ID, patientId);
-                intent.putExtra(Constants.EXTRA_PATIENT_NAME, patientName);
-                intent.putExtra(Constants.EXTRA_PATIENT_BED, patientBed);
                 startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_settings) {

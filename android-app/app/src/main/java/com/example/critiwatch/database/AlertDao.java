@@ -75,6 +75,35 @@ public class AlertDao {
         return alerts.isEmpty() ? null : alerts.get(0);
     }
 
+    public AlertItem getLatestAlertByPatientId(int patientId) {
+        List<AlertItem> activeAlerts = runJoinedAlertQuery(
+                "SELECT a.*, p.name AS p_name, p.age AS p_age, p.sex AS p_sex, "
+                        + "p.bed_number AS p_bed, p.risk_level AS p_risk "
+                        + "FROM " + DatabaseHelper.TABLE_ALERTS + " a "
+                        + "LEFT JOIN " + DatabaseHelper.TABLE_PATIENTS + " p ON a."
+                        + DatabaseHelper.COL_ALERT_PATIENT_ID + " = p." + DatabaseHelper.COL_ID + " "
+                        + "WHERE a." + DatabaseHelper.COL_ALERT_PATIENT_ID + " = ? "
+                        + "AND a." + DatabaseHelper.COL_ALERT_ACKNOWLEDGED + " = 0 "
+                        + "ORDER BY a." + DatabaseHelper.COL_ALERT_TIMESTAMP + " DESC LIMIT 1",
+                new String[]{String.valueOf(patientId)}
+        );
+        if (!activeAlerts.isEmpty()) {
+            return activeAlerts.get(0);
+        }
+
+        List<AlertItem> allAlerts = runJoinedAlertQuery(
+                "SELECT a.*, p.name AS p_name, p.age AS p_age, p.sex AS p_sex, "
+                        + "p.bed_number AS p_bed, p.risk_level AS p_risk "
+                        + "FROM " + DatabaseHelper.TABLE_ALERTS + " a "
+                        + "LEFT JOIN " + DatabaseHelper.TABLE_PATIENTS + " p ON a."
+                        + DatabaseHelper.COL_ALERT_PATIENT_ID + " = p." + DatabaseHelper.COL_ID + " "
+                        + "WHERE a." + DatabaseHelper.COL_ALERT_PATIENT_ID + " = ? "
+                        + "ORDER BY a." + DatabaseHelper.COL_ALERT_TIMESTAMP + " DESC LIMIT 1",
+                new String[]{String.valueOf(patientId)}
+        );
+        return allAlerts.isEmpty() ? null : allAlerts.get(0);
+    }
+
     public int acknowledgeAlert(int alertId) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();

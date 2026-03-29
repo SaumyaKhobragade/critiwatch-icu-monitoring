@@ -223,31 +223,12 @@ public class AlertsActivity extends AppCompatActivity {
     private void openAlertDetail(AlertItem alertItem) {
         Intent intent = new Intent(this, NotificationDetailActivity.class);
         intent.putExtra(Constants.EXTRA_ALERT_ID, alertItem.getId());
-        intent.putExtra(Constants.EXTRA_ALERT_TYPE, alertItem.getType());
-        intent.putExtra(Constants.EXTRA_ALERT_SEVERITY, alertItem.getSeverity());
-        intent.putExtra(Constants.EXTRA_ALERT_VALUE, alertItem.getValue());
-        intent.putExtra(Constants.EXTRA_ALERT_UNIT, alertItem.getUnit());
-        intent.putExtra(Constants.EXTRA_ALERT_TIMESTAMP, alertItem.getTimestamp());
-        intent.putExtra(Constants.EXTRA_ALERT_DESCRIPTION, alertItem.getDescription());
-        intent.putExtra(Constants.EXTRA_PREDICTION_CONFIDENCE, alertItem.getPredictionConfidence());
-
-        intent.putExtra(Constants.EXTRA_PATIENT_ID, alertItem.getPatientId());
-        intent.putExtra(Constants.EXTRA_PATIENT_NAME, alertItem.getPatientName());
-        intent.putExtra(Constants.EXTRA_PATIENT_AGE, alertItem.getPatientAge());
-        intent.putExtra(Constants.EXTRA_PATIENT_SEX, alertItem.getPatientSex());
-        intent.putExtra(Constants.EXTRA_PATIENT_BED, alertItem.getPatientBed());
-        intent.putExtra(Constants.EXTRA_PATIENT_RISK, alertItem.getPatientRisk());
         startActivity(intent);
     }
 
     private void openPatientDetail(AlertItem alertItem) {
         Intent intent = new Intent(this, PatientDetailActivity.class);
         intent.putExtra(Constants.EXTRA_PATIENT_ID, alertItem.getPatientId());
-        intent.putExtra(Constants.EXTRA_PATIENT_NAME, alertItem.getPatientName());
-        intent.putExtra(Constants.EXTRA_PATIENT_AGE, alertItem.getPatientAge());
-        intent.putExtra(Constants.EXTRA_PATIENT_SEX, alertItem.getPatientSex());
-        intent.putExtra(Constants.EXTRA_PATIENT_BED, alertItem.getPatientBed());
-        intent.putExtra(Constants.EXTRA_PATIENT_RISK, alertItem.getPatientRisk());
         startActivity(intent);
     }
 

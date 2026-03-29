@@ -54,7 +54,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
             return insets;
         });
 
-        readPatientExtras();
+        if (!readPatientExtras()) {
+            return;
+        }
         bindPatientHeader();
         setupMetricSpinner();
         loadVitalHistoryFromDatabase();
@@ -63,17 +65,25 @@ public class GraphHistoryActivity extends AppCompatActivity {
         setupBottomNavigation();
     }
 
-    private void readPatientExtras() {
+    private boolean readPatientExtras() {
         Intent source = getIntent();
         patientId = source.getStringExtra(Constants.EXTRA_PATIENT_ID);
         patientName = source.getStringExtra(Constants.EXTRA_PATIENT_NAME);
         patientBed = source.getStringExtra(Constants.EXTRA_PATIENT_BED);
 
         if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "1";
+            Toast.makeText(this, "Missing patient id", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
         }
 
         int id = parseId(patientId);
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid patient id", Toast.LENGTH_SHORT).show();
+            finish();
+            return false;
+        }
+
         Patient patient = patientDao.getPatientById(id);
         if (patient != null) {
             if (patientName == null || patientName.trim().isEmpty()) {
@@ -90,6 +100,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 patientBed = "-";
             }
         }
+        return true;
     }
 
     private void bindPatientHeader() {
