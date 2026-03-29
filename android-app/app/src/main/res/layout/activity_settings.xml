@@ -259,12 +259,9 @@
                             android:background="@color/border_color" />
 
                         <LinearLayout
-                            android:id="@+id/rowAccountProfileInformation"
+                            android:id="@+id/rowPredictionSensitivity"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
                             android:orientation="horizontal"
                             android:padding="@dimen/spacing_md">
 
@@ -282,51 +279,6 @@
                                 android:text="High"
                                 android:textColor="@color/text_secondary" />
                         </LinearLayout>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <TextView
-                    style="@style/TextAppearance.CritiWatch.Header"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Account"
-                    android:textSize="@dimen/text_caption" />
-
-                <androidx.cardview.widget.CardView
-                    style="@style/Widget.CritiWatch.CardView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/spacing_xl">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:padding="@dimen/spacing_md">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Profile Information"
-                                android:textColor="@color/text_primary"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="›"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

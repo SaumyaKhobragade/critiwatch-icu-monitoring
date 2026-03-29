@@ -34,11 +34,6 @@ public class SettingsActivity extends AppCompatActivity {
             btnViewProfileLink.setOnClickListener(v -> openProfileScreen());
         }
 
-        android.view.View rowAccountProfileInformation = findViewById(R.id.rowAccountProfileInformation);
-        if (rowAccountProfileInformation != null) {
-            rowAccountProfileInformation.setOnClickListener(v -> openProfileScreen());
-        }
-
         Button btnSettingsLogout = findViewById(R.id.btnSettingsLogout);
         if (btnSettingsLogout != null) {
             btnSettingsLogout.setOnClickListener(v -> {
