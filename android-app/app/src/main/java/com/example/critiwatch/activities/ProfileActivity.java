@@ -1,8 +1,14 @@
 package com.example.critiwatch;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
+import android.util.TypedValue;
+import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,9 +54,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         ImageView ivEditProfile = findViewById(R.id.ivEditProfile);
         if (ivEditProfile != null) {
-            ivEditProfile.setOnClickListener(v ->
-                    Toast.makeText(this, "Edit profile not implemented yet", Toast.LENGTH_SHORT).show()
-            );
+            ivEditProfile.setOnClickListener(v -> showEditProfileDialog());
         }
 
         setupBottomNavigation();
@@ -121,6 +125,81 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
+    private void showEditProfileDialog() {
+        int sidePadding = dpToPx(20);
+        int spacing = dpToPx(12);
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(sidePadding, spacing, sidePadding, 0);
+        container.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
+        EditText etName = new EditText(this);
+        etName.setHint("Full name");
+        etName.setText(sessionManager.getUserName());
+        etName.setSingleLine(true);
+        container.addView(etName);
+
+        EditText etEmail = new EditText(this);
+        etEmail.setHint("Email");
+        etEmail.setText(sessionManager.getUserEmail());
+        etEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        etEmail.setSingleLine(true);
+        LinearLayout.LayoutParams emailParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        emailParams.topMargin = spacing;
+        container.addView(etEmail, emailParams);
+
+        EditText etRole = new EditText(this);
+        etRole.setHint("Role");
+        etRole.setText(sessionManager.getUserRole());
+        etRole.setSingleLine(true);
+        LinearLayout.LayoutParams roleParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        roleParams.topMargin = spacing;
+        container.addView(etRole, roleParams);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Edit Profile")
+                .setView(container)
+                .setPositiveButton("Save", null)
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String name = etName.getText() == null ? "" : etName.getText().toString().trim();
+            String email = etEmail.getText() == null ? "" : etEmail.getText().toString().trim();
+            String role = etRole.getText() == null ? "" : etRole.getText().toString().trim();
+
+            if (name.isEmpty()) {
+                etName.setError("Name is required");
+                return;
+            }
+            if (email.isEmpty()) {
+                etEmail.setError("Email is required");
+                return;
+            }
+            if (role.isEmpty()) {
+                etRole.setError("Role is required");
+                return;
+            }
+
+            sessionManager.createLoginSession(name, email, role);
+            bindSessionData();
+            Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        }));
+
+        dialog.show();
+    }
+
     private String buildInitials(String fullName) {
         String trimmed = fullName == null ? "" : fullName.trim();
         if (trimmed.isEmpty()) {
@@ -142,5 +221,13 @@ public class ProfileActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                getResources().getDisplayMetrics()
+        );
     }
 }

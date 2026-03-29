@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -26,9 +27,21 @@ import java.util.List;
 
 public class AlertsActivity extends AppCompatActivity {
 
-    private final List<AlertItem> alerts = new ArrayList<>();
+    private static final String FILTER_ALL = "all";
+    private static final String FILTER_CRITICAL = "critical";
+    private static final String FILTER_WARNING = "warning";
+    private static final String FILTER_ACKNOWLEDGED = "acknowledged";
+
+    private final List<AlertItem> allAlerts = new ArrayList<>();
+    private final List<AlertItem> filteredAlerts = new ArrayList<>();
     private AlertRepository alertRepository;
     private AlertAdapter alertAdapter;
+    private String currentFilter = FILTER_ALL;
+
+    private TextView filterAll;
+    private TextView filterCritical;
+    private TextView filterWarning;
+    private TextView filterAcknowledged;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +58,8 @@ public class AlertsActivity extends AppCompatActivity {
         });
 
         setupAlertRecyclerView();
+        setupFilterChips();
         loadAlertsFromDatabase();
-        bindHeaderCount();
         setupBottomNavigation();
     }
 
@@ -63,7 +76,7 @@ public class AlertsActivity extends AppCompatActivity {
         }
 
         rvAlerts.setLayoutManager(new LinearLayoutManager(this));
-        alertAdapter = new AlertAdapter(alerts, new AlertAdapter.OnAlertActionListener() {
+        alertAdapter = new AlertAdapter(filteredAlerts, new AlertAdapter.OnAlertActionListener() {
             @Override
             public void onAlertSelected(AlertItem alertItem) {
                 openAlertDetail(alertItem);
@@ -76,6 +89,11 @@ public class AlertsActivity extends AppCompatActivity {
 
             @Override
             public void onMarkResolved(AlertItem alertItem) {
+                if (alertItem.isAcknowledged()) {
+                    Toast.makeText(AlertsActivity.this, "Alert already acknowledged", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 int alertId = parseId(alertItem.getId());
                 boolean success = alertRepository.acknowledgeAlert(alertId);
                 Toast.makeText(AlertsActivity.this,
@@ -87,19 +105,93 @@ public class AlertsActivity extends AppCompatActivity {
         rvAlerts.setAdapter(alertAdapter);
     }
 
+    private void setupFilterChips() {
+        filterAll = findViewById(R.id.filterAll);
+        filterCritical = findViewById(R.id.filterCritical);
+        filterWarning = findViewById(R.id.filterWarning);
+        filterAcknowledged = findViewById(R.id.filterAcknowledged);
+
+        if (filterAll != null) {
+            filterAll.setOnClickListener(v -> setFilter(FILTER_ALL));
+        }
+        if (filterCritical != null) {
+            filterCritical.setOnClickListener(v -> setFilter(FILTER_CRITICAL));
+        }
+        if (filterWarning != null) {
+            filterWarning.setOnClickListener(v -> setFilter(FILTER_WARNING));
+        }
+        if (filterAcknowledged != null) {
+            filterAcknowledged.setOnClickListener(v -> setFilter(FILTER_ACKNOWLEDGED));
+        }
+
+        updateFilterChipStyles();
+    }
+
+    private void setFilter(String filter) {
+        currentFilter = filter;
+        applyAlertFilter();
+    }
+
     private void loadAlertsFromDatabase() {
-        alerts.clear();
-        alerts.addAll(alertRepository.getAllAlerts());
+        allAlerts.clear();
+        allAlerts.addAll(alertRepository.getAllAlerts());
+        applyAlertFilter();
+    }
+
+    private void applyAlertFilter() {
+        filteredAlerts.clear();
+        for (AlertItem alert : allAlerts) {
+            if (matchesCurrentFilter(alert)) {
+                filteredAlerts.add(alert);
+            }
+        }
+
         if (alertAdapter != null) {
             alertAdapter.notifyDataSetChanged();
         }
+        updateFilterChipStyles();
         bindHeaderCount();
+    }
+
+    private boolean matchesCurrentFilter(AlertItem alert) {
+        if (FILTER_CRITICAL.equals(currentFilter)) {
+            return Constants.RISK_CRITICAL.equalsIgnoreCase(alert.getSeverity());
+        }
+        if (FILTER_WARNING.equals(currentFilter)) {
+            return Constants.RISK_WARNING.equalsIgnoreCase(alert.getSeverity());
+        }
+        if (FILTER_ACKNOWLEDGED.equals(currentFilter)) {
+            return alert.isAcknowledged();
+        }
+        return true;
+    }
+
+    private void updateFilterChipStyles() {
+        styleFilterChip(filterAll, FILTER_ALL.equals(currentFilter));
+        styleFilterChip(filterCritical, FILTER_CRITICAL.equals(currentFilter));
+        styleFilterChip(filterWarning, FILTER_WARNING.equals(currentFilter));
+        styleFilterChip(filterAcknowledged, FILTER_ACKNOWLEDGED.equals(currentFilter));
+    }
+
+    private void styleFilterChip(TextView chip, boolean selected) {
+        if (chip == null) {
+            return;
+        }
+
+        chip.setBackgroundResource(selected ? R.drawable.bg_button_primary : R.drawable.bg_chip_neutral);
+        chip.setTextColor(ContextCompat.getColor(this, selected ? R.color.inverse_text : R.color.text_secondary));
     }
 
     private void bindHeaderCount() {
         TextView tvAlertCountBadge = findViewById(R.id.tvAlertCountBadge);
         if (tvAlertCountBadge != null) {
-            tvAlertCountBadge.setText(alerts.size() + " Active");
+            int activeCount = 0;
+            for (AlertItem alert : allAlerts) {
+                if (!alert.isAcknowledged()) {
+                    activeCount++;
+                }
+            }
+            tvAlertCountBadge.setText(activeCount + " Active");
         }
     }
 

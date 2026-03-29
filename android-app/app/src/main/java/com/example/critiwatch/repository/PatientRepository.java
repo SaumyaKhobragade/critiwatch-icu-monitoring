@@ -66,6 +66,10 @@ public class PatientRepository {
         return patientDao.getAllPatients().isEmpty();
     }
 
+    public boolean deletePatient(int patientId) {
+        return patientDao.deletePatient(patientId) > 0;
+    }
+
     private Patient attachLatestData(Patient patient) {
         int id = parseId(patient.getId());
         if (id <= 0) {

@@ -44,7 +44,6 @@ public class AlertDao {
                         + "FROM " + DatabaseHelper.TABLE_ALERTS + " a "
                         + "LEFT JOIN " + DatabaseHelper.TABLE_PATIENTS + " p ON a."
                         + DatabaseHelper.COL_ALERT_PATIENT_ID + " = p." + DatabaseHelper.COL_ID + " "
-                        + "WHERE a." + DatabaseHelper.COL_ALERT_ACKNOWLEDGED + " = 0 "
                         + "ORDER BY a." + DatabaseHelper.COL_ALERT_TIMESTAMP + " DESC",
                 null
         );

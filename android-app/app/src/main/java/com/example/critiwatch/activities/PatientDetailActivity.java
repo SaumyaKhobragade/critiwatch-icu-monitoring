@@ -1,8 +1,10 @@
 package com.example.critiwatch;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.PopupMenu;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -275,6 +277,11 @@ public class PatientDetailActivity extends AppCompatActivity {
             ivBack.setOnClickListener(v -> finish());
         }
 
+        ImageView ivMore = findViewById(R.id.ivMore);
+        if (ivMore != null) {
+            ivMore.setOnClickListener(this::showPatientActionsMenu);
+        }
+
         Button btnViewHistory = findViewById(R.id.btnViewHistory);
         if (btnViewHistory != null) {
             btnViewHistory.setOnClickListener(v -> {
@@ -309,6 +316,48 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (llAlertBanner != null) {
             llAlertBanner.setOnClickListener(v -> openAlertDetail());
         }
+    }
+
+    private void showPatientActionsMenu(View anchor) {
+        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        popupMenu.inflate(R.menu.menu_patient_detail_actions);
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.menuDeletePatient) {
+                confirmDeletePatient();
+                return true;
+            }
+            return false;
+        });
+        popupMenu.show();
+    }
+
+    private void confirmDeletePatient() {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Patient")
+                .setMessage("This will remove the patient and related local vitals, predictions, and alerts from this device.")
+                .setPositiveButton("Delete", (dialog, which) -> deletePatient())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deletePatient() {
+        int patientDbId = parseId(patientId);
+        if (patientDbId <= 0) {
+            Toast.makeText(this, "Unable to delete: invalid patient id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean deleted = patientRepository.deletePatient(patientDbId);
+        if (!deleted) {
+            Toast.makeText(this, "Patient deletion failed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Toast.makeText(this, "Patient deleted", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, DashboardActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
     }
 
     private void openAlertDetail() {

@@ -2,8 +2,12 @@ package com.example.critiwatch;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -26,12 +30,22 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private final List<Patient> patients = new ArrayList<>();
+    private static final String FILTER_ALL_WARDS = "All ICU Wards";
+    private static final String FILTER_ICU_1_4 = "ICU-01 to ICU-04";
+    private static final String FILTER_ICU_5_8 = "ICU-05 to ICU-08";
+    private static final String FILTER_ICU_9_12 = "ICU-09 to ICU-12";
+    private static final String FILTER_CRITICAL = "Critical Priority";
+
+    private final List<Patient> allPatients = new ArrayList<>();
+    private final List<Patient> filteredPatients = new ArrayList<>();
     private PatientRepository patientRepository;
     private PatientAdapter patientAdapter;
+    private String selectedWardFilter = FILTER_ALL_WARDS;
+    private String searchQuery = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,28 +62,23 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         setupWardFilterSpinner();
+        setupSearchBar();
         setupPatientRecyclerView();
         loadPatientsFromDatabase();
 
         Button btnAddPatient = findViewById(R.id.btnAddPatient);
         if (btnAddPatient != null) {
-            btnAddPatient.setOnClickListener(v -> {
-                startActivity(new Intent(this, AddPatientActivity.class));
-            });
+            btnAddPatient.setOnClickListener(v -> startActivity(new Intent(this, AddPatientActivity.class)));
         }
 
         ImageView ivProfile = findViewById(R.id.ivProfile);
         if (ivProfile != null) {
-            ivProfile.setOnClickListener(v -> {
-                startActivity(new Intent(this, ProfileActivity.class));
-            });
+            ivProfile.setOnClickListener(v -> startActivity(new Intent(this, ProfileActivity.class)));
         }
 
         ImageView ivSettings = findViewById(R.id.ivSettings);
         if (ivSettings != null) {
-            ivSettings.setOnClickListener(v -> {
-                startActivity(new Intent(this, SettingsActivity.class));
-            });
+            ivSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
         }
 
         setupBottomNavigation();
@@ -88,18 +97,39 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         rvPatients.setLayoutManager(new LinearLayoutManager(this));
-        patientAdapter = new PatientAdapter(patients, this::openPatientDetail);
+        patientAdapter = new PatientAdapter(filteredPatients, this::openPatientDetail);
         rvPatients.setAdapter(patientAdapter);
     }
 
     private void loadPatientsFromDatabase() {
-        patients.clear();
-        patients.addAll(patientRepository.getAllPatientsWithLatestData());
+        allPatients.clear();
+        allPatients.addAll(patientRepository.getAllPatientsWithLatestData());
+        applyPatientFilters();
+    }
 
-        if (patientAdapter != null) {
-            patientAdapter.notifyDataSetChanged();
+    private void setupSearchBar() {
+        EditText etSearch = findViewById(R.id.etSearch);
+        if (etSearch == null) {
+            return;
         }
-        bindSummaryStats();
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // No-op
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                searchQuery = s == null ? "" : s.toString().trim();
+                applyPatientFilters();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // No-op
+            }
+        });
     }
 
     private void setupWardFilterSpinner() {
@@ -109,11 +139,11 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         List<String> wardFilters = new ArrayList<>();
-        wardFilters.add("All ICU Wards");
-        wardFilters.add("ICU-01 to ICU-04");
-        wardFilters.add("ICU-05 to ICU-08");
-        wardFilters.add("ICU-09 to ICU-12");
-        wardFilters.add("Critical Priority");
+        wardFilters.add(FILTER_ALL_WARDS);
+        wardFilters.add(FILTER_ICU_1_4);
+        wardFilters.add(FILTER_ICU_5_8);
+        wardFilters.add(FILTER_ICU_9_12);
+        wardFilters.add(FILTER_CRITICAL);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -122,6 +152,112 @@ public class DashboardActivity extends AppCompatActivity {
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerWardFilter.setAdapter(adapter);
+
+        spinnerWardFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
+                selectedWardFilter = wardFilters.get(position);
+                applyPatientFilters();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedWardFilter = FILTER_ALL_WARDS;
+                applyPatientFilters();
+            }
+        });
+    }
+
+    private void applyPatientFilters() {
+        filteredPatients.clear();
+        for (Patient patient : allPatients) {
+            if (matchesWardFilter(patient) && matchesSearchQuery(patient)) {
+                filteredPatients.add(patient);
+            }
+        }
+
+        if (patientAdapter != null) {
+            patientAdapter.notifyDataSetChanged();
+        }
+        bindSummaryStats();
+    }
+
+    private boolean matchesSearchQuery(Patient patient) {
+        if (searchQuery == null || searchQuery.isEmpty()) {
+            return true;
+        }
+
+        String query = searchQuery.toLowerCase(Locale.US);
+        String patientName = safeLower(patient.getName());
+        String patientId = safeLower(patient.getId());
+        String bedNumber = safeLower(patient.getBedNumber());
+        String risk = safeLower(patient.getRiskLevel());
+
+        return patientName.contains(query)
+                || patientId.contains(query)
+                || bedNumber.contains(query)
+                || risk.contains(query);
+    }
+
+    private boolean matchesWardFilter(Patient patient) {
+        if (FILTER_ALL_WARDS.equals(selectedWardFilter)) {
+            return true;
+        }
+        if (FILTER_CRITICAL.equals(selectedWardFilter)) {
+            return Constants.RISK_CRITICAL.equalsIgnoreCase(patient.getRiskLevel());
+        }
+
+        int wardNumber = extractWardNumber(patient.getWard(), patient.getBedNumber());
+        if (wardNumber <= 0) {
+            return false;
+        }
+
+        if (FILTER_ICU_1_4.equals(selectedWardFilter)) {
+            return wardNumber >= 1 && wardNumber <= 4;
+        }
+        if (FILTER_ICU_5_8.equals(selectedWardFilter)) {
+            return wardNumber >= 5 && wardNumber <= 8;
+        }
+        if (FILTER_ICU_9_12.equals(selectedWardFilter)) {
+            return wardNumber >= 9 && wardNumber <= 12;
+        }
+
+        return true;
+    }
+
+    private int extractWardNumber(String ward, String bedNumber) {
+        String source = ward;
+        if (source == null || source.trim().isEmpty()) {
+            source = bedNumber;
+        }
+        if (source == null) {
+            return -1;
+        }
+
+        StringBuilder digits = new StringBuilder();
+        for (int i = 0; i < source.length(); i++) {
+            char c = source.charAt(i);
+            if (Character.isDigit(c)) {
+                digits.append(c);
+                if (digits.length() == 2) {
+                    break;
+                }
+            }
+        }
+
+        if (digits.length() == 0) {
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(digits.toString());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
+    }
+
+    private String safeLower(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.US);
     }
 
     private void setupBottomNavigation() {
@@ -158,7 +294,7 @@ public class DashboardActivity extends AppCompatActivity {
         int stableCount = 0;
         int warningCount = 0;
         int criticalCount = 0;
-        for (Patient patient : patients) {
+        for (Patient patient : filteredPatients) {
             if (Constants.RISK_CRITICAL.equalsIgnoreCase(patient.getRiskLevel())) {
                 criticalCount++;
             } else if (Constants.RISK_WARNING.equalsIgnoreCase(patient.getRiskLevel())) {
@@ -169,7 +305,7 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (tvTotal != null) {
-            tvTotal.setText(String.valueOf(patients.size()));
+            tvTotal.setText(String.valueOf(filteredPatients.size()));
         }
         if (tvStable != null) {
             tvStable.setText(String.valueOf(stableCount));
