@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.services.SessionManager;
 import com.example.critiwatch.utils.SystemUiUtils;
 
 public class SplashActivity extends AppCompatActivity {
@@ -21,12 +22,14 @@ public class SplashActivity extends AppCompatActivity {
     private static final long SPLASH_DELAY_MS = 1500L;
     private final Handler splashHandler = new Handler(Looper.getMainLooper());
     private final Runnable splashNavigationRunnable = this::navigateNext;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash);
+        sessionManager = new SessionManager(this);
         SystemUiUtils.applySystemBarStyling(this);
 
         View root = findViewById(R.id.main);
@@ -73,9 +76,9 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private Intent resolveNextDestinationIntent() {
-        // TODO: Replace with SharedPreferences-backed session check after auth state is persisted.
-        // if (isUserLoggedIn) return new Intent(this, DashboardActivity.class);
-        // else return new Intent(this, LoginActivity.class);
+        if (sessionManager.isLoggedIn()) {
+            return new Intent(this, DashboardActivity.class);
+        }
         return new Intent(this, LoginActivity.class);
     }
 }
