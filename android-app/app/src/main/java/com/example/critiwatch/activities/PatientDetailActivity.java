@@ -15,13 +15,25 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.database.DatabaseSeeder;
+import com.example.critiwatch.database.VitalDao;
+import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.models.Prediction;
+import com.example.critiwatch.models.VitalSign;
+import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.repository.PredictionRepository;
 import com.example.critiwatch.utils.Constants;
+import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
+
+    private PatientRepository patientRepository;
+    private PredictionRepository predictionRepository;
+    private VitalDao vitalDao;
 
     private String patientId;
     private String patientName;
@@ -34,12 +46,17 @@ public class PatientDetailActivity extends AppCompatActivity {
     private String bloodPressure;
     private int respiratoryRate;
     private double temperature;
+    private Prediction latestPrediction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_patient_detail);
+        DatabaseSeeder.seedIfEmpty(this);
+        patientRepository = new PatientRepository(this);
+        predictionRepository = new PredictionRepository(this);
+        vitalDao = new VitalDao(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -48,6 +65,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         });
 
         readPatientExtras();
+        loadPatientDataFromDatabase();
         bindPatientHeader();
         bindVitalCards();
         setupClickActions();
@@ -69,22 +87,55 @@ public class PatientDetailActivity extends AppCompatActivity {
         temperature = source.getDoubleExtra(Constants.EXTRA_PATIENT_TEMP, 38.2);
 
         if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "P102";
+            patientId = "1";
         }
+    }
+
+    private void loadPatientDataFromDatabase() {
+        int id = parseId(patientId);
+        Patient patient = patientRepository.getPatientByIdWithLatestData(id);
+        if (patient != null) {
+            patientId = patient.getId();
+            patientName = patient.getName();
+            patientAge = patient.getAge();
+            patientSex = patient.getSex();
+            patientBed = patient.getBedNumber();
+            patientRisk = patient.getRiskLevel();
+            heartRate = patient.getHeartRate();
+            spo2 = patient.getSpo2();
+            bloodPressure = patient.getBloodPressure();
+            respiratoryRate = patient.getRespiratoryRate();
+            temperature = patient.getTemperature();
+        }
+
+        VitalSign latestVital = vitalDao.getLatestVitalByPatientId(id);
+        if (latestVital != null) {
+            heartRate = latestVital.getHeartRate();
+            spo2 = latestVital.getSpo2();
+            bloodPressure = latestVital.getBloodPressure();
+            respiratoryRate = latestVital.getRespiratoryRate();
+            temperature = latestVital.getTemperature();
+        }
+
+        latestPrediction = predictionRepository.getLatestPredictionByPatientId(id);
+        if (latestPrediction != null && latestPrediction.getRiskLevel() != null && !latestPrediction.getRiskLevel().trim().isEmpty()) {
+            patientRisk = latestPrediction.getRiskLevel();
+        }
+
         if (patientName == null || patientName.trim().isEmpty()) {
-            patientName = "Sarah Johnson";
+            patientName = "Unknown Patient";
         }
         if (patientSex == null || patientSex.trim().isEmpty()) {
-            patientSex = "Female";
+            patientSex = "Unknown";
         }
         if (patientBed == null || patientBed.trim().isEmpty()) {
-            patientBed = "ICU-04";
+            patientBed = "-";
         }
         if (patientRisk == null || patientRisk.trim().isEmpty()) {
             patientRisk = Constants.RISK_WARNING;
         }
         if (bloodPressure == null || bloodPressure.trim().isEmpty()) {
-            bloodPressure = "85/55";
+            bloodPressure = "0/0";
         }
     }
 
@@ -110,7 +161,11 @@ public class PatientDetailActivity extends AppCompatActivity {
             tvPatientIdChip.setText("ID: " + patientId);
         }
         if (tvAdmittedChip != null) {
-            tvAdmittedChip.setText(getMockAdmissionText(patientRisk));
+            if (latestPrediction != null && latestPrediction.getCreatedAt() != null) {
+                tvAdmittedChip.setText("Updated: " + DateTimeUtils.toRelativeTime(latestPrediction.getCreatedAt()));
+            } else {
+                tvAdmittedChip.setText(getMockAdmissionText(patientRisk));
+            }
         }
 
         if (tvStatusBadge != null) {
@@ -128,7 +183,10 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
 
         if (tvAlertBannerMessage != null) {
-            if (Constants.RISK_CRITICAL.equalsIgnoreCase(patientRisk)) {
+            if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
+                tvAlertBannerMessage.setText(latestPrediction.getSummary());
+                tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(patientRisk)));
+            } else if (Constants.RISK_CRITICAL.equalsIgnoreCase(patientRisk)) {
                 tvAlertBannerMessage.setText("CRITICAL: High deterioration risk detected. Sepsis protocol review recommended.");
                 tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, R.color.status_critical));
             } else if (Constants.RISK_WARNING.equalsIgnoreCase(patientRisk)) {
@@ -301,6 +359,17 @@ public class PatientDetailActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    private int parseId(String rawId) {
+        if (rawId == null || rawId.trim().isEmpty()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(rawId.trim());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 
     private int getSeverityColorForMetric(String risk) {

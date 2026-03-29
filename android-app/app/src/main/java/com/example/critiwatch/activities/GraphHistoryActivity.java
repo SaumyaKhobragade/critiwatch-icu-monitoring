@@ -18,6 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.adapters.VitalHistoryAdapter;
+import com.example.critiwatch.database.DatabaseSeeder;
+import com.example.critiwatch.database.PatientDao;
+import com.example.critiwatch.database.VitalDao;
+import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.SystemUiUtils;
@@ -32,12 +36,17 @@ public class GraphHistoryActivity extends AppCompatActivity {
     private String patientId;
     private String patientName;
     private String patientBed;
+    private VitalDao vitalDao;
+    private PatientDao patientDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_graph_history);
+        DatabaseSeeder.seedIfEmpty(this);
+        vitalDao = new VitalDao(this);
+        patientDao = new PatientDao(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -48,7 +57,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
         readPatientExtras();
         bindPatientHeader();
         setupMetricSpinner();
-        initializeMockVitalHistory();
+        loadVitalHistoryFromDatabase();
         setupReadingRecyclerView();
         setupClickActions();
         setupBottomNavigation();
@@ -61,13 +70,25 @@ public class GraphHistoryActivity extends AppCompatActivity {
         patientBed = source.getStringExtra(Constants.EXTRA_PATIENT_BED);
 
         if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "P102";
+            patientId = "1";
         }
-        if (patientName == null || patientName.trim().isEmpty()) {
-            patientName = "Sarah Johnson";
-        }
-        if (patientBed == null || patientBed.trim().isEmpty()) {
-            patientBed = "ICU-04";
+
+        int id = parseId(patientId);
+        Patient patient = patientDao.getPatientById(id);
+        if (patient != null) {
+            if (patientName == null || patientName.trim().isEmpty()) {
+                patientName = patient.getName();
+            }
+            if (patientBed == null || patientBed.trim().isEmpty()) {
+                patientBed = patient.getBedNumber();
+            }
+        } else {
+            if (patientName == null || patientName.trim().isEmpty()) {
+                patientName = "Unknown Patient";
+            }
+            if (patientBed == null || patientBed.trim().isEmpty()) {
+                patientBed = "-";
+            }
         }
     }
 
@@ -106,14 +127,12 @@ public class GraphHistoryActivity extends AppCompatActivity {
         spinnerMetric.setAdapter(adapter);
     }
 
-    private void initializeMockVitalHistory() {
+    private void loadVitalHistoryFromDatabase() {
         vitalHistory.clear();
-        vitalHistory.add(new VitalSign("14:30:05", 132, 86, "85/55", 30, 38.6));
-        vitalHistory.add(new VitalSign("14:25:10", 128, 88, "88/58", 28, 38.4));
-        vitalHistory.add(new VitalSign("14:20:08", 124, 90, "92/60", 27, 38.2));
-        vitalHistory.add(new VitalSign("14:15:12", 120, 91, "95/62", 25, 38.0));
-        vitalHistory.add(new VitalSign("14:10:07", 116, 92, "98/64", 24, 37.8));
-        vitalHistory.add(new VitalSign("14:05:06", 110, 93, "102/68", 22, 37.6));
+        int id = parseId(patientId);
+        if (id > 0) {
+            vitalHistory.addAll(vitalDao.getVitalsByPatientId(id));
+        }
     }
 
     private void setupReadingRecyclerView() {
@@ -142,7 +161,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
         Button btnViewFullHistory = findViewById(R.id.btnViewFullHistory);
         if (btnViewFullHistory != null) {
             btnViewFullHistory.setOnClickListener(v ->
-                    Toast.makeText(this, "Showing recent mock vitals for now", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Loaded " + vitalHistory.size() + " local readings", Toast.LENGTH_SHORT).show()
             );
         }
     }
@@ -170,5 +189,16 @@ public class GraphHistoryActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    private int parseId(String rawId) {
+        if (rawId == null || rawId.trim().isEmpty()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(rawId.trim());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 }

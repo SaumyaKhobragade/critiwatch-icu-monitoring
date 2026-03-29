@@ -14,7 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.adapters.AlertAdapter;
+import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.models.AlertItem;
+import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -24,13 +26,17 @@ import java.util.List;
 
 public class AlertsActivity extends AppCompatActivity {
 
-    private final List<AlertItem> mockAlerts = new ArrayList<>();
+    private final List<AlertItem> alerts = new ArrayList<>();
+    private AlertRepository alertRepository;
+    private AlertAdapter alertAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_alerts);
+        alertRepository = new AlertRepository(this);
+        DatabaseSeeder.seedIfEmpty(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -38,10 +44,16 @@ public class AlertsActivity extends AppCompatActivity {
             return insets;
         });
 
-        initializeMockAlerts();
         setupAlertRecyclerView();
+        loadAlertsFromDatabase();
         bindHeaderCount();
         setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadAlertsFromDatabase();
     }
 
     private void setupAlertRecyclerView() {
@@ -51,7 +63,7 @@ public class AlertsActivity extends AppCompatActivity {
         }
 
         rvAlerts.setLayoutManager(new LinearLayoutManager(this));
-        AlertAdapter adapter = new AlertAdapter(mockAlerts, new AlertAdapter.OnAlertActionListener() {
+        alertAdapter = new AlertAdapter(alerts, new AlertAdapter.OnAlertActionListener() {
             @Override
             public void onAlertSelected(AlertItem alertItem) {
                 openAlertDetail(alertItem);
@@ -64,96 +76,30 @@ public class AlertsActivity extends AppCompatActivity {
 
             @Override
             public void onMarkResolved(AlertItem alertItem) {
-                Toast.makeText(
-                        AlertsActivity.this,
-                        "Marked resolved: " + alertItem.getId(),
-                        Toast.LENGTH_SHORT
-                ).show();
+                int alertId = parseId(alertItem.getId());
+                boolean success = alertRepository.acknowledgeAlert(alertId);
+                Toast.makeText(AlertsActivity.this,
+                        success ? "Alert resolved" : "Unable to resolve alert",
+                        Toast.LENGTH_SHORT).show();
+                loadAlertsFromDatabase();
             }
         });
-        rvAlerts.setAdapter(adapter);
+        rvAlerts.setAdapter(alertAdapter);
     }
 
-    private void initializeMockAlerts() {
-        mockAlerts.clear();
-        mockAlerts.add(
-                new AlertItem(
-                        "ALT-001",
-                        "Low SpO2",
-                        Constants.RISK_CRITICAL,
-                        "86",
-                        "%",
-                        "2m ago",
-                        "SpO2 dropped below 88% for over 4 minutes. Immediate bedside assessment advised.",
-                        "P102",
-                        "Sarah Johnson",
-                        64,
-                        "Female",
-                        "ICU-04",
-                        Constants.RISK_CRITICAL,
-                        92
-                )
-        );
-        mockAlerts.add(
-                new AlertItem(
-                        "ALT-002",
-                        "High Heart Rate",
-                        Constants.RISK_WARNING,
-                        "124",
-                        "BPM",
-                        "5m ago",
-                        "Sustained tachycardia observed with increasing trend in last 15 minutes.",
-                        "P118",
-                        "Michael Ross",
-                        57,
-                        "Male",
-                        "ICU-01",
-                        Constants.RISK_WARNING,
-                        78
-                )
-        );
-        mockAlerts.add(
-                new AlertItem(
-                        "ALT-003",
-                        "Low Blood Pressure",
-                        Constants.RISK_CRITICAL,
-                        "82/50",
-                        "mmHg",
-                        "9m ago",
-                        "Hypotensive episode detected. Consider fluid challenge and sepsis protocol review.",
-                        "P130",
-                        "Daniel Kim",
-                        71,
-                        "Male",
-                        "ICU-02",
-                        Constants.RISK_WARNING,
-                        85
-                )
-        );
-        mockAlerts.add(
-                new AlertItem(
-                        "ALT-004",
-                        "Prediction Alert",
-                        Constants.RISK_WARNING,
-                        "79",
-                        "%",
-                        "12m ago",
-                        "Model indicates elevated deterioration risk in next 4 hours due to HR and RR trend.",
-                        "P137",
-                        "Elena Garcia",
-                        59,
-                        "Female",
-                        "ICU-09",
-                        Constants.RISK_STABLE,
-                        79
-                )
-        );
+    private void loadAlertsFromDatabase() {
+        alerts.clear();
+        alerts.addAll(alertRepository.getAllAlerts());
+        if (alertAdapter != null) {
+            alertAdapter.notifyDataSetChanged();
+        }
+        bindHeaderCount();
     }
 
     private void bindHeaderCount() {
         TextView tvAlertCountBadge = findViewById(R.id.tvAlertCountBadge);
         if (tvAlertCountBadge != null) {
-            tvAlertCountBadge.setText(mockAlerts.size() + " Active");
+            tvAlertCountBadge.setText(alerts.size() + " Active");
         }
     }
 
@@ -211,5 +157,16 @@ public class AlertsActivity extends AppCompatActivity {
         intent.putExtra(Constants.EXTRA_PATIENT_BED, alertItem.getPatientBed());
         intent.putExtra(Constants.EXTRA_PATIENT_RISK, alertItem.getPatientRisk());
         startActivity(intent);
+    }
+
+    private int parseId(String rawId) {
+        if (rawId == null || rawId.trim().isEmpty()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(rawId.trim());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 }

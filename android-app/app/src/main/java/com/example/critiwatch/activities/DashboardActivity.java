@@ -17,7 +17,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.adapters.PatientAdapter;
+import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -27,13 +29,17 @@ import java.util.List;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private final List<Patient> mockPatients = new ArrayList<>();
+    private final List<Patient> patients = new ArrayList<>();
+    private PatientRepository patientRepository;
+    private PatientAdapter patientAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dashboard);
+        patientRepository = new PatientRepository(this);
+        DatabaseSeeder.seedIfEmpty(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -41,10 +47,9 @@ public class DashboardActivity extends AppCompatActivity {
             return insets;
         });
 
-        initializeMockPatients();
         setupWardFilterSpinner();
         setupPatientRecyclerView();
-        bindSummaryStats();
+        loadPatientsFromDatabase();
 
         Button btnAddPatient = findViewById(R.id.btnAddPatient);
         if (btnAddPatient != null) {
@@ -70,6 +75,12 @@ public class DashboardActivity extends AppCompatActivity {
         setupBottomNavigation();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadPatientsFromDatabase();
+    }
+
     private void setupPatientRecyclerView() {
         RecyclerView rvPatients = findViewById(R.id.rvPatients);
         if (rvPatients == null) {
@@ -77,8 +88,18 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         rvPatients.setLayoutManager(new LinearLayoutManager(this));
-        PatientAdapter adapter = new PatientAdapter(mockPatients, this::openPatientDetail);
-        rvPatients.setAdapter(adapter);
+        patientAdapter = new PatientAdapter(patients, this::openPatientDetail);
+        rvPatients.setAdapter(patientAdapter);
+    }
+
+    private void loadPatientsFromDatabase() {
+        patients.clear();
+        patients.addAll(patientRepository.getAllPatientsWithLatestData());
+
+        if (patientAdapter != null) {
+            patientAdapter.notifyDataSetChanged();
+        }
+        bindSummaryStats();
     }
 
     private void setupWardFilterSpinner() {
@@ -128,15 +149,6 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
-    private void initializeMockPatients() {
-        mockPatients.clear();
-        mockPatients.add(new Patient("P102", "Sarah Johnson", 64, "Female", "ICU-04", Constants.RISK_CRITICAL, 132, 86, "85/55", 30, 38.6, "2 mins ago"));
-        mockPatients.add(new Patient("P118", "Michael Ross", 57, "Male", "ICU-01", Constants.RISK_WARNING, 112, 92, "98/64", 24, 37.7, "1 min ago"));
-        mockPatients.add(new Patient("P121", "Priya Nair", 46, "Female", "ICU-07", Constants.RISK_STABLE, 84, 98, "118/76", 17, 36.8, "Just now"));
-        mockPatients.add(new Patient("P130", "Daniel Kim", 71, "Male", "ICU-02", Constants.RISK_WARNING, 104, 91, "102/68", 22, 37.5, "3 mins ago"));
-        mockPatients.add(new Patient("P137", "Elena Garcia", 59, "Female", "ICU-09", Constants.RISK_STABLE, 78, 97, "122/80", 16, 36.7, "2 mins ago"));
-    }
-
     private void bindSummaryStats() {
         TextView tvTotal = findViewById(R.id.tvTotalPatients);
         TextView tvStable = findViewById(R.id.tvStablePatients);
@@ -146,7 +158,7 @@ public class DashboardActivity extends AppCompatActivity {
         int stableCount = 0;
         int warningCount = 0;
         int criticalCount = 0;
-        for (Patient patient : mockPatients) {
+        for (Patient patient : patients) {
             if (Constants.RISK_CRITICAL.equalsIgnoreCase(patient.getRiskLevel())) {
                 criticalCount++;
             } else if (Constants.RISK_WARNING.equalsIgnoreCase(patient.getRiskLevel())) {
@@ -157,7 +169,7 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (tvTotal != null) {
-            tvTotal.setText(String.valueOf(mockPatients.size()));
+            tvTotal.setText(String.valueOf(patients.size()));
         }
         if (tvStable != null) {
             tvStable.setText(String.valueOf(stableCount));

@@ -15,12 +15,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.database.DatabaseSeeder;
+import com.example.critiwatch.models.AlertItem;
+import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.repository.AlertRepository;
+import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.SystemUiUtils;
 
 import java.util.Locale;
 
 public class NotificationDetailActivity extends AppCompatActivity {
+
+    private AlertRepository alertRepository;
+    private PatientRepository patientRepository;
 
     private String patientId;
     private String patientName;
@@ -43,6 +51,9 @@ public class NotificationDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_notification_detail);
+        DatabaseSeeder.seedIfEmpty(this);
+        alertRepository = new AlertRepository(this);
+        patientRepository = new PatientRepository(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -59,6 +70,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
 
     private void readIntentData() {
         Intent source = getIntent();
+
         patientId = source.getStringExtra(Constants.EXTRA_PATIENT_ID);
         patientName = source.getStringExtra(Constants.EXTRA_PATIENT_NAME);
         patientAge = source.getIntExtra(Constants.EXTRA_PATIENT_AGE, 64);
@@ -75,8 +87,11 @@ public class NotificationDetailActivity extends AppCompatActivity {
         alertDescription = source.getStringExtra(Constants.EXTRA_ALERT_DESCRIPTION);
         predictionConfidence = source.getIntExtra(Constants.EXTRA_PREDICTION_CONFIDENCE, 88);
 
+        loadAlertFromDatabaseIfPossible();
+        loadPatientFromDatabaseIfPossible();
+
         if (patientId == null || patientId.trim().isEmpty()) {
-            patientId = "P102";
+            patientId = "1";
         }
         if (patientName == null || patientName.trim().isEmpty()) {
             patientName = "Sarah Johnson";
@@ -92,7 +107,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
         }
 
         if (alertId == null || alertId.trim().isEmpty()) {
-            alertId = "ALT-001";
+            alertId = "1";
         }
         if (alertType == null || alertType.trim().isEmpty()) {
             alertType = "Prediction Alert";
@@ -112,6 +127,53 @@ public class NotificationDetailActivity extends AppCompatActivity {
         if (alertDescription == null || alertDescription.trim().isEmpty()) {
             alertDescription = "Significant deterioration trend observed. Immediate bedside review advised.";
         }
+    }
+
+    private void loadAlertFromDatabaseIfPossible() {
+        int id = parseId(alertId);
+        if (id <= 0) {
+            return;
+        }
+
+        AlertItem alert = alertRepository.getAlertById(id);
+        if (alert == null) {
+            return;
+        }
+
+        alertId = alert.getId();
+        alertType = alert.getType();
+        alertSeverity = alert.getSeverity();
+        alertValue = alert.getValue();
+        alertUnit = alert.getUnit();
+        alertTimestamp = alert.getTimestamp();
+        alertDescription = alert.getDescription();
+        predictionConfidence = alert.getPredictionConfidence();
+
+        patientId = alert.getPatientId();
+        patientName = alert.getPatientName();
+        patientAge = alert.getPatientAge();
+        patientSex = alert.getPatientSex();
+        patientBed = alert.getPatientBed();
+        patientRisk = alert.getPatientRisk();
+    }
+
+    private void loadPatientFromDatabaseIfPossible() {
+        int id = parseId(patientId);
+        if (id <= 0) {
+            return;
+        }
+
+        Patient patient = patientRepository.getPatientByIdWithLatestData(id);
+        if (patient == null) {
+            return;
+        }
+
+        patientId = patient.getId();
+        patientName = patient.getName();
+        patientAge = patient.getAge();
+        patientSex = patient.getSex();
+        patientBed = patient.getBedNumber();
+        patientRisk = patient.getRiskLevel();
     }
 
     private void bindAlertHeader() {
@@ -199,6 +261,10 @@ public class NotificationDetailActivity extends AppCompatActivity {
         Button btnAcknowledgeAlert = findViewById(R.id.btnAcknowledgeAlert);
         if (btnAcknowledgeAlert != null) {
             btnAcknowledgeAlert.setOnClickListener(v -> {
+                int id = parseId(alertId);
+                if (id > 0) {
+                    alertRepository.acknowledgeAlert(id);
+                }
                 Toast.makeText(this, "Alert " + alertId + " acknowledged", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, AlertsActivity.class));
             });
@@ -231,5 +297,16 @@ public class NotificationDetailActivity extends AppCompatActivity {
             return R.color.status_warning;
         }
         return R.color.status_stable;
+    }
+
+    private int parseId(String rawId) {
+        if (rawId == null || rawId.trim().isEmpty()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(rawId.trim());
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 }
