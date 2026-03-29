@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -51,9 +52,7 @@ public class AddPatientActivity extends AppCompatActivity {
 
         Button btnRegisterPatient = findViewById(R.id.btnRegisterPatient);
         if (btnRegisterPatient != null) {
-            btnRegisterPatient.setOnClickListener(v ->
-                    Toast.makeText(this, "Register action pending backend/DB wiring", Toast.LENGTH_SHORT).show()
-            );
+            btnRegisterPatient.setOnClickListener(v -> attemptRegisterPatient());
         }
 
         View btnScanWristband = findViewById(R.id.btnScanWristband);
@@ -109,5 +108,40 @@ public class AddPatientActivity extends AppCompatActivity {
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerWard.setAdapter(adapter);
+    }
+
+    private void attemptRegisterPatient() {
+        boolean vitalsValid = validateRequiredField(R.id.etHeartRate, "Heart rate")
+                && validateRequiredField(R.id.etSpO2, "SpO2")
+                && validateRequiredField(R.id.etSystolicBP, "Systolic BP")
+                && validateRequiredField(R.id.etDiastolicBP, "Diastolic BP")
+                && validateRequiredField(R.id.etRespiratoryRate, "Respiratory rate")
+                && validateRequiredField(R.id.etTemperature, "Temperature")
+                && validateRequiredField(R.id.etHeight, "Height")
+                && validateRequiredField(R.id.etWeight, "Weight");
+
+        if (!vitalsValid) {
+            Toast.makeText(this, "Please fill all vital fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Toast.makeText(this, "Patient registered (frontend test)", Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean validateRequiredField(int editTextId, String fieldLabel) {
+        EditText field = findViewById(editTextId);
+        if (field == null) {
+            Toast.makeText(this, "Missing view id: " + getResources().getResourceEntryName(editTextId), Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        String value = field.getText().toString().trim();
+        if (value.isEmpty()) {
+            field.setError(fieldLabel + " is required");
+            field.requestFocus();
+            return false;
+        }
+
+        return true;
     }
 }

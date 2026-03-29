@@ -278,7 +278,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_lg"
-                        android:text="Initial Vitals (Optional)"
+                        android:text="Initial Vitals"
                         android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_subhead"
                         android:textStyle="bold" />
@@ -297,7 +297,8 @@
                             android:background="@drawable/bg_edit_text"
                             android:hint="HR (bpm)"
                             android:inputType="number"
-                            android:paddingHorizontal="@dimen/spacing_md" />
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
 
                         <EditText
                             android:id="@+id/etSpO2"
@@ -307,7 +308,8 @@
                             android:background="@drawable/bg_edit_text"
                             android:hint="SpO2 (%)"
                             android:inputType="number"
-                            android:paddingHorizontal="@dimen/spacing_md" />
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
 
                         <EditText
                             android:id="@+id/etSystolicBP"
@@ -317,7 +319,8 @@
                             android:background="@drawable/bg_edit_text"
                             android:hint="SBP (mmHg)"
                             android:inputType="number"
-                            android:paddingHorizontal="@dimen/spacing_md" />
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
 
                         <EditText
                             android:id="@+id/etDiastolicBP"
@@ -327,7 +330,52 @@
                             android:background="@drawable/bg_edit_text"
                             android:hint="DBP (mmHg)"
                             android:inputType="number"
-                            android:paddingHorizontal="@dimen/spacing_md" />
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
+
+                        <EditText
+                            android:id="@+id/etRespiratoryRate"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_columnWeight="1"
+                            android:background="@drawable/bg_edit_text"
+                            android:hint="RR (breaths/min)"
+                            android:inputType="number"
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
+
+                        <EditText
+                            android:id="@+id/etTemperature"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_columnWeight="1"
+                            android:background="@drawable/bg_edit_text"
+                            android:hint="Temp (\u00b0C)"
+                            android:inputType="numberDecimal"
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
+
+                        <EditText
+                            android:id="@+id/etHeight"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_columnWeight="1"
+                            android:background="@drawable/bg_edit_text"
+                            android:hint="Height (cm)"
+                            android:inputType="numberDecimal"
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
+
+                        <EditText
+                            android:id="@+id/etWeight"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/input_height"
+                            android:layout_columnWeight="1"
+                            android:background="@drawable/bg_edit_text"
+                            android:hint="Weight (kg)"
+                            android:inputType="numberDecimal"
+                            android:paddingHorizontal="@dimen/spacing_md"
+                            android:textSize="@dimen/text_input_compact" />
                     </GridLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
