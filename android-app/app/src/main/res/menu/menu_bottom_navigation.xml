@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/nav_dashboard" android:icon="@android:drawable/ic_menu_agenda" android:title="Dashboard" />
-    <item android:id="@+id/nav_alerts" android:icon="@android:drawable/ic_dialog_alert" android:title="Alerts" />
-    <item android:id="@+id/nav_history" android:icon="@android:drawable/ic_menu_recent_history" android:title="History" />
-    <item android:id="@+id/nav_settings" android:icon="@android:drawable/ic_menu_preferences" android:title="Settings" />
+    <item android:id="@+id/nav_dashboard" android:icon="@drawable/ic_nav_dashboard" android:title="Dashboard" />
+    <item android:id="@+id/nav_alerts" android:icon="@drawable/ic_nav_alerts" android:title="Alerts" />
+    <item android:id="@+id/nav_history" android:icon="@drawable/ic_nav_history" android:title="History" />
+    <item android:id="@+id/nav_settings" android:icon="@drawable/ic_nav_settings" android:title="Settings" />
 </menu>

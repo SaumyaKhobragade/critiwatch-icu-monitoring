@@ -36,7 +36,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:contentDescription="@string/profile"
-                android:src="@android:drawable/ic_menu_myplaces"
+                android:src="@drawable/ic_action_profile"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -48,7 +48,7 @@
                 android:layout_height="28dp"
                 android:layout_marginEnd="@dimen/spacing_lg"
                 android:contentDescription="@string/settings"
-                android:src="@android:drawable/ic_menu_preferences"
+                android:src="@drawable/ic_action_settings"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/ivProfile"
                 app:layout_constraintTop_toTopOf="parent"
@@ -76,8 +76,9 @@
                 android:layout_height="@dimen/input_height"
                 android:layout_margin="@dimen/spacing_lg"
                 android:background="@drawable/bg_edit_text"
-                android:drawableStart="@android:drawable/ic_menu_search"
+                android:drawableStart="@drawable/ic_action_search"
                 android:drawablePadding="12dp"
+                android:drawableTint="@color/text_muted"
                 android:hint="Search patient name or bed ID..."
                 android:importantForAutofill="no"
                 android:inputType="text"
@@ -285,11 +286,17 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_card"
+        android:background="@drawable/bg_bottom_navigation"
+        app:itemIconTint="@color/bottom_nav_item_colors"
+        app:itemTextColor="@color/bottom_nav_item_colors"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
 
 
 

@@ -231,6 +231,7 @@
                         android:orientation="vertical">
 
                         <LinearLayout
+                            android:id="@+id/rowAssignedWard"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
@@ -258,8 +259,12 @@
                             android:background="@color/border_color" />
 
                         <LinearLayout
+                            android:id="@+id/rowAccountProfileInformation"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
                             android:orientation="horizontal"
                             android:padding="@dimen/spacing_md">
 
@@ -322,34 +327,6 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginHorizontal="@dimen/spacing_md"
-                            android:background="@color/border_color" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:padding="@dimen/spacing_md">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Security &amp; Privacy"
-                                android:textColor="@color/text_primary"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="›"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -379,9 +356,14 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_card"
+        android:background="@drawable/bg_bottom_navigation"
+        app:itemIconTint="@color/bottom_nav_item_colors"
+        app:itemTextColor="@color/bottom_nav_item_colors"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 

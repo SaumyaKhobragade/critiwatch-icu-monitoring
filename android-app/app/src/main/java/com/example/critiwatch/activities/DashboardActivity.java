@@ -2,113 +2,110 @@ package com.example.critiwatch;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.critiwatch.adapters.PatientAdapter;
+import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.utils.Constants;
+import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    public static final String EXTRA_PATIENT_ID = "patient_id";
+    private final List<Patient> mockPatients = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_dashboard);
+        SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        initializeMockPatients();
+        setupWardFilterSpinner();
+        setupPatientRecyclerView();
+        bindSummaryStats();
+
         Button btnAddPatient = findViewById(R.id.btnAddPatient);
         if (btnAddPatient != null) {
             btnAddPatient.setOnClickListener(v -> {
-                Toast.makeText(this, "Opening Add Patient", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, AddPatientActivity.class));
             });
-        } else {
-            Toast.makeText(this, "Missing view id: btnAddPatient", Toast.LENGTH_LONG).show();
         }
 
         ImageView ivProfile = findViewById(R.id.ivProfile);
         if (ivProfile != null) {
             ivProfile.setOnClickListener(v -> {
-                Toast.makeText(this, "Opening Profile", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, ProfileActivity.class));
             });
-        } else {
-            Toast.makeText(this, "Missing view id: ivProfile", Toast.LENGTH_LONG).show();
         }
 
         ImageView ivSettings = findViewById(R.id.ivSettings);
         if (ivSettings != null) {
             ivSettings.setOnClickListener(v -> {
-                Toast.makeText(this, "Opening Settings", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(this, SettingsActivity.class));
             });
-        } else {
-            Toast.makeText(this, "Missing view id: ivSettings", Toast.LENGTH_LONG).show();
-        }
-
-        setupPatientListNavigation();
-
-        TextView tvPatientListHeader = findViewById(R.id.tvLabelPatientList);
-        if (tvPatientListHeader != null) {
-            tvPatientListHeader.setOnClickListener(v -> openPatientDetail("P102"));
         }
 
         setupBottomNavigation();
     }
 
-    private void setupPatientListNavigation() {
+    private void setupPatientRecyclerView() {
         RecyclerView rvPatients = findViewById(R.id.rvPatients);
         if (rvPatients == null) {
-            Toast.makeText(this, "Missing view id: rvPatients", Toast.LENGTH_LONG).show();
             return;
         }
 
-        GestureDetector gestureDetector = new GestureDetector(
-                this,
-                new GestureDetector.SimpleOnGestureListener() {
-                    @Override
-                    public boolean onSingleTapUp(@NonNull MotionEvent e) {
-                        return true;
-                    }
-                }
-        );
+        rvPatients.setLayoutManager(new LinearLayoutManager(this));
+        PatientAdapter adapter = new PatientAdapter(mockPatients, this::openPatientDetail);
+        rvPatients.setAdapter(adapter);
+    }
 
-        rvPatients.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                View child = rv.findChildViewUnder(e.getX(), e.getY());
-                if (child != null && gestureDetector.onTouchEvent(e)) {
-                    openPatientDetail("P102");
-                    return true;
-                }
-                return false;
-            }
-        });
+    private void setupWardFilterSpinner() {
+        Spinner spinnerWardFilter = findViewById(R.id.spinnerWardFilter);
+        if (spinnerWardFilter == null) {
+            return;
+        }
+
+        List<String> wardFilters = new ArrayList<>();
+        wardFilters.add("All ICU Wards");
+        wardFilters.add("ICU-01 to ICU-04");
+        wardFilters.add("ICU-05 to ICU-08");
+        wardFilters.add("ICU-09 to ICU-12");
+        wardFilters.add("Critical Priority");
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                wardFilters
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerWardFilter.setAdapter(adapter);
     }
 
     private void setupBottomNavigation() {
         BottomNavigationView bottomNavigation = findViewById(R.id.bottomNavigation);
         if (bottomNavigation == null) {
-            Toast.makeText(this, "Missing view id: bottomNavigation", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -131,10 +128,61 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
-    private void openPatientDetail(String patientId) {
+    private void initializeMockPatients() {
+        mockPatients.clear();
+        mockPatients.add(new Patient("P102", "Sarah Johnson", 64, "Female", "ICU-04", Constants.RISK_CRITICAL, 132, 86, "85/55", 30, 38.6, "2 mins ago"));
+        mockPatients.add(new Patient("P118", "Michael Ross", 57, "Male", "ICU-01", Constants.RISK_WARNING, 112, 92, "98/64", 24, 37.7, "1 min ago"));
+        mockPatients.add(new Patient("P121", "Priya Nair", 46, "Female", "ICU-07", Constants.RISK_STABLE, 84, 98, "118/76", 17, 36.8, "Just now"));
+        mockPatients.add(new Patient("P130", "Daniel Kim", 71, "Male", "ICU-02", Constants.RISK_WARNING, 104, 91, "102/68", 22, 37.5, "3 mins ago"));
+        mockPatients.add(new Patient("P137", "Elena Garcia", 59, "Female", "ICU-09", Constants.RISK_STABLE, 78, 97, "122/80", 16, 36.7, "2 mins ago"));
+    }
+
+    private void bindSummaryStats() {
+        TextView tvTotal = findViewById(R.id.tvTotalPatients);
+        TextView tvStable = findViewById(R.id.tvStablePatients);
+        TextView tvWarning = findViewById(R.id.tvWarningPatients);
+        TextView tvCritical = findViewById(R.id.tvCriticalPatients);
+
+        int stableCount = 0;
+        int warningCount = 0;
+        int criticalCount = 0;
+        for (Patient patient : mockPatients) {
+            if (Constants.RISK_CRITICAL.equalsIgnoreCase(patient.getRiskLevel())) {
+                criticalCount++;
+            } else if (Constants.RISK_WARNING.equalsIgnoreCase(patient.getRiskLevel())) {
+                warningCount++;
+            } else {
+                stableCount++;
+            }
+        }
+
+        if (tvTotal != null) {
+            tvTotal.setText(String.valueOf(mockPatients.size()));
+        }
+        if (tvStable != null) {
+            tvStable.setText(String.valueOf(stableCount));
+        }
+        if (tvWarning != null) {
+            tvWarning.setText(String.valueOf(warningCount));
+        }
+        if (tvCritical != null) {
+            tvCritical.setText(String.valueOf(criticalCount));
+        }
+    }
+
+    private void openPatientDetail(Patient patient) {
         Intent intent = new Intent(this, PatientDetailActivity.class);
-        intent.putExtra(EXTRA_PATIENT_ID, patientId);
-        Toast.makeText(this, "Opening Patient Detail: " + patientId, Toast.LENGTH_SHORT).show();
+        intent.putExtra(Constants.EXTRA_PATIENT_ID, patient.getId());
+        intent.putExtra(Constants.EXTRA_PATIENT_NAME, patient.getName());
+        intent.putExtra(Constants.EXTRA_PATIENT_AGE, patient.getAge());
+        intent.putExtra(Constants.EXTRA_PATIENT_SEX, patient.getSex());
+        intent.putExtra(Constants.EXTRA_PATIENT_BED, patient.getBedNumber());
+        intent.putExtra(Constants.EXTRA_PATIENT_RISK, patient.getRiskLevel());
+        intent.putExtra(Constants.EXTRA_PATIENT_HEART_RATE, patient.getHeartRate());
+        intent.putExtra(Constants.EXTRA_PATIENT_SPO2, patient.getSpo2());
+        intent.putExtra(Constants.EXTRA_PATIENT_BP, patient.getBloodPressure());
+        intent.putExtra(Constants.EXTRA_PATIENT_RR, patient.getRespiratoryRate());
+        intent.putExtra(Constants.EXTRA_PATIENT_TEMP, patient.getTemperature());
         startActivity(intent);
     }
 }

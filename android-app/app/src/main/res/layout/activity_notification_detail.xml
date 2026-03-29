@@ -21,10 +21,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_weight="1">
 
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="start"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_action_back"
+            android:tint="@color/text_primary" />
+
         <TextView
             android:id="@+id/tvAlertIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="🚨"
             android:textSize="80sp" />
 
@@ -47,6 +57,16 @@
             android:text="Acute Deterioration Risk"
             android:textColor="@color/text_secondary"
             android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tvAlertDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:gravity="center"
+            android:text="Significant deterioration trend observed. Immediate bedside review advised."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- Notification Content Card -->
@@ -249,4 +269,5 @@
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 

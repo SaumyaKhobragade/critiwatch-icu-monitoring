@@ -127,9 +127,11 @@
                 android:id="@+id/btnOpenPatientFile"
                 style="@style/Widget.CritiWatch.Button"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/button_height"
                 android:layout_weight="1"
-                android:text="Open Patient File"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="Patient Details"
                 android:textAllCaps="false"
                 android:textSize="12sp" />
 
@@ -139,12 +141,15 @@
 
             <Button
                 android:id="@+id/btnMarkResolved"
-                style="@style/Widget.CritiWatch.Button.Secondary"
+                style="@style/Widget.CritiWatch.Button"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/button_height"
                 android:layout_weight="1"
+                android:gravity="center"
+                android:maxLines="1"
                 android:text="Mark Resolved"
                 android:textAllCaps="false"
+                android:textColor="@color/inverse_text"
                 android:textSize="12sp" />
         </LinearLayout>
 

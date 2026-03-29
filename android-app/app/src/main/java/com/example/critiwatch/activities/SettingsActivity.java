@@ -12,6 +12,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -21,6 +22,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_settings);
+        SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -29,9 +31,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         TextView btnViewProfileLink = findViewById(R.id.btnViewProfileLink);
         if (btnViewProfileLink != null) {
-            btnViewProfileLink.setOnClickListener(v ->
-                    startActivity(new Intent(this, ProfileActivity.class))
-            );
+            btnViewProfileLink.setOnClickListener(v -> openProfileScreen());
+        }
+
+        android.view.View rowAccountProfileInformation = findViewById(R.id.rowAccountProfileInformation);
+        if (rowAccountProfileInformation != null) {
+            rowAccountProfileInformation.setOnClickListener(v -> openProfileScreen());
         }
 
         Button btnSettingsLogout = findViewById(R.id.btnSettingsLogout);
@@ -79,5 +84,11 @@ public class SettingsActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
         finish();
+    }
+
+    private void openProfileScreen() {
+        Intent intent = new Intent(this, ProfileActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
     }
 }

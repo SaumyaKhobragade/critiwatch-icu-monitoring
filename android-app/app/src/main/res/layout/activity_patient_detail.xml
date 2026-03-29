@@ -27,7 +27,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:contentDescription="Back"
-                android:src="@android:drawable/ic_menu_revert"
+                android:src="@drawable/ic_action_back"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -50,7 +50,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:contentDescription="More"
-                android:src="@android:drawable/ic_menu_more"
+                android:src="@drawable/ic_action_more"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -128,6 +128,7 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tvPatientIdChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/spacing_sm"
@@ -140,6 +141,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvAdmittedChip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_chip_neutral"
@@ -171,6 +173,7 @@
                     android:textSize="20sp" />
 
                 <TextView
+                    android:id="@+id/tvAlertBannerMessage"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -227,6 +230,7 @@
                 android:textSize="@dimen/text_caption" />
 
             <GridLayout
+                android:id="@+id/gridVitals"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/spacing_md"
@@ -235,6 +239,7 @@
 
                 <!-- HR -->
                 <include
+                    android:id="@+id/cardVitalHeartRate"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -242,6 +247,7 @@
 
                 <!-- SpO2 -->
                 <include
+                    android:id="@+id/cardVitalSpo2"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -249,6 +255,7 @@
 
                 <!-- BP -->
                 <include
+                    android:id="@+id/cardVitalBloodPressure"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -256,6 +263,7 @@
 
                 <!-- RR -->
                 <include
+                    android:id="@+id/cardVitalRespRate"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -263,6 +271,7 @@
 
                 <!-- Temp -->
                 <include
+                    android:id="@+id/cardVitalTemperature"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -270,6 +279,7 @@
 
                 <!-- Glucose -->
                 <include
+                    android:id="@+id/cardVitalGlucose"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -367,10 +377,11 @@
 
                 <Button
                     android:id="@+id/btnAcknowledgeAlert"
-                    style="@style/Widget.CritiWatch.Button.Secondary"
+                    style="@style/Widget.CritiWatch.Button"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginBottom="@dimen/spacing_md"
+                    android:textColor="@color/inverse_text"
                     android:text="Acknowledge Alert" />
 
                 <Button
@@ -390,9 +401,15 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_card"
+        android:background="@drawable/bg_bottom_navigation"
+        app:itemIconTint="@color/bottom_nav_item_colors"
+        app:itemTextColor="@color/bottom_nav_item_colors"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu_bottom_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
 

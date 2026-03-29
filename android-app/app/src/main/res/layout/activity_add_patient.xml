@@ -26,7 +26,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:contentDescription="Back"
-                android:src="@android:drawable/ic_menu_revert"
+                android:src="@drawable/ic_action_back"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -75,7 +75,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginEnd="@dimen/spacing_sm"
-                    android:src="@android:drawable/ic_menu_camera"
+                    android:src="@drawable/ic_action_camera"
                     app:tint="@color/primary_accent" />
 
                 <TextView
@@ -160,7 +160,7 @@
                         android:layout_marginTop="@dimen/spacing_sm"
                         android:layout_marginBottom="@dimen/spacing_md"
                         android:background="@drawable/bg_edit_text"
-                        android:hint="Years"
+                        android:hint="e.g. 64 years"
                         android:inputType="number"
                         android:paddingHorizontal="@dimen/spacing_md"
                         android:textSize="@dimen/text_body" />
@@ -295,7 +295,7 @@
                             android:layout_height="@dimen/input_height"
                             android:layout_columnWeight="1"
                             android:background="@drawable/bg_edit_text"
-                            android:hint="Heart Rate (BPM)"
+                            android:hint="HR (bpm)"
                             android:inputType="number"
                             android:paddingHorizontal="@dimen/spacing_md" />
 
@@ -315,7 +315,7 @@
                             android:layout_height="@dimen/input_height"
                             android:layout_columnWeight="1"
                             android:background="@drawable/bg_edit_text"
-                            android:hint="Systolic BP (mmHg)"
+                            android:hint="SBP (mmHg)"
                             android:inputType="number"
                             android:paddingHorizontal="@dimen/spacing_md" />
 
@@ -325,7 +325,7 @@
                             android:layout_height="@dimen/input_height"
                             android:layout_columnWeight="1"
                             android:background="@drawable/bg_edit_text"
-                            android:hint="Diastolic BP (mmHg)"
+                            android:hint="DBP (mmHg)"
                             android:inputType="number"
                             android:paddingHorizontal="@dimen/spacing_md" />
                     </GridLayout>
@@ -354,4 +354,5 @@
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 
