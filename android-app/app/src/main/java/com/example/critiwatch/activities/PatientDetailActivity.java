@@ -5,9 +5,11 @@ import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,9 +26,11 @@ import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
+import com.example.critiwatch.models.PatientNote;
 import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
+import com.example.critiwatch.repository.NoteRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
 import com.example.critiwatch.services.NotificationHelper;
@@ -44,6 +48,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private static final int DUPLICATE_ALERT_WINDOW_MINUTES = 10;
 
     private AlertRepository alertRepository;
+    private NoteRepository noteRepository;
     private PatientRepository patientRepository;
     private PredictionRepository predictionRepository;
     private VitalDao vitalDao;
@@ -63,6 +68,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private VitalSign latestVital;
     private Prediction latestPrediction;
     private AlertItem latestAlert;
+    private PatientNote latestNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +77,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_patient_detail);
         DatabaseSeeder.seedIfEmpty(this);
         alertRepository = new AlertRepository(this);
+        noteRepository = new NoteRepository(this);
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
         vitalDao = new VitalDao(this);
@@ -90,6 +97,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
         bindPatientHeader();
         bindVitalCards();
+        bindLatestClinicalNote();
         setupClickActions();
         setupBottomNavigation();
     }
@@ -356,17 +364,87 @@ public class PatientDetailActivity extends AppCompatActivity {
             btnAcknowledgeAlert.setOnClickListener(v -> acknowledgeLatestAlert());
         }
 
-        Button btnAddNote = findViewById(R.id.btnAddNote);
-        if (btnAddNote != null) {
-            btnAddNote.setOnClickListener(v ->
-                    Toast.makeText(this, "Clinical note input will be wired in next step", Toast.LENGTH_SHORT).show()
-            );
+        Button btnAddClinicalNote = findViewById(R.id.btnAddClinicalNote);
+        if (btnAddClinicalNote != null) {
+            btnAddClinicalNote.setOnClickListener(v -> showAddClinicalNoteDialog());
         }
 
         View llAlertBanner = findViewById(R.id.llAlertBanner);
         if (llAlertBanner != null) {
             llAlertBanner.setOnClickListener(v -> openAlertDetail());
         }
+    }
+
+    private void bindLatestClinicalNote() {
+        TextView tvClinicalNote = findViewById(R.id.tvClinicalNote);
+        TextView tvClinicalNoteTimestamp = findViewById(R.id.tvClinicalNoteTimestamp);
+        if (tvClinicalNote == null) {
+            return;
+        }
+
+        int id = parseId(patientId);
+        latestNote = id > 0 ? noteRepository.getLatestNoteByPatientId(id) : null;
+        if (latestNote == null || latestNote.getNoteText() == null || latestNote.getNoteText().trim().isEmpty()) {
+            tvClinicalNote.setText("No clinical notes added yet");
+            if (tvClinicalNoteTimestamp != null) {
+                tvClinicalNoteTimestamp.setText("");
+                tvClinicalNoteTimestamp.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        tvClinicalNote.setText(latestNote.getNoteText().trim());
+        if (tvClinicalNoteTimestamp != null) {
+            String createdAt = latestNote.getCreatedAt();
+            if (createdAt == null || createdAt.trim().isEmpty()) {
+                tvClinicalNoteTimestamp.setText("");
+                tvClinicalNoteTimestamp.setVisibility(View.GONE);
+            } else {
+                tvClinicalNoteTimestamp.setText("Latest update: " + DateTimeUtils.toRelativeTime(createdAt));
+                tvClinicalNoteTimestamp.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void showAddClinicalNoteDialog() {
+        EditText input = new EditText(this);
+        input.setHint("Enter clinical note");
+        input.setMinLines(3);
+        input.setMaxLines(6);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        int padding = Math.round(getResources().getDisplayMetrics().density * 16f);
+        input.setPadding(padding, padding, padding, padding);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Add Clinical Note")
+                .setView(input)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save", (dialog, which) -> saveClinicalNote(input.getText() == null ? "" : input.getText().toString()))
+                .show();
+    }
+
+    private void saveClinicalNote(String noteText) {
+        String trimmed = noteText == null ? "" : noteText.trim();
+        if (trimmed.isEmpty()) {
+            Toast.makeText(this, "Clinical note cannot be empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int id = parseId(patientId);
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid patient id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        PatientNote note = new PatientNote(patientId, trimmed, DateTimeUtils.now());
+        long noteId = noteRepository.addNote(note);
+        if (noteId <= 0) {
+            Toast.makeText(this, "Unable to save clinical note", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        bindLatestClinicalNote();
+        Toast.makeText(this, "Clinical note saved", Toast.LENGTH_SHORT).show();
     }
 
     private void runPredictionForCurrentPatient() {

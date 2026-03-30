@@ -54,7 +54,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xs"
-            android:text="Acute Deterioration Risk"
+            android:text="Monitoring Alert"
             android:textColor="@color/text_secondary"
             android:textSize="18sp" />
 
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_sm"
             android:gravity="center"
-            android:text="Significant deterioration trend observed. Immediate bedside review advised."
+            android:text="Alert details and response options are shown below."
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
     </LinearLayout>
@@ -239,12 +239,12 @@
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/btnActivateResponse"
+                        android:id="@+id/btnEscalateAlert"
                         style="@style/Widget.CritiWatch.Button.Danger"
                         android:layout_width="match_parent"
                         android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_md"
-                        android:text="Activate Rapid Response"
+                        android:text="Escalate Alert"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -254,14 +254,22 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
                         android:layout_marginBottom="@dimen/spacing_md"
-                        android:text="View Full Patient Profile" />
+                        android:text="Open Patient Details" />
 
                     <Button
                         android:id="@+id/btnAcknowledgeAlert"
                         style="@style/Widget.CritiWatch.Button.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
+                        android:layout_marginBottom="@dimen/spacing_md"
                         android:text="Acknowledge Alert" />
+
+                    <Button
+                        android:id="@+id/btnDismissAlert"
+                        style="@style/Widget.CritiWatch.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/button_height"
+                        android:text="Dismiss" />
                 </LinearLayout>
 
             </LinearLayout>

@@ -301,57 +301,34 @@
                     android:padding="@dimen/spacing_md">
 
                     <TextView
+                        android:id="@+id/tvClinicalNotesTitle"
                         style="@style/TextAppearance.CritiWatch.Header"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Clinical Notes"
                         android:textSize="@dimen/text_caption" />
 
-                    <!-- Note Item 1 -->
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvClinicalNote"
+                        style="@style/TextAppearance.CritiWatch.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_md"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Nurse Rivera • 14:22 Today"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Patient showing increased work of breathing. Oxygen increased to 4L via NC. Notified attending physician."
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                        android:text="No clinical notes added yet"
+                        android:textSize="13sp" />
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color" android:layout_marginVertical="@dimen/spacing_sm" />
-
-                    <!-- Note Item 2 -->
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvClinicalNoteTimestamp"
+                        style="@style/TextAppearance.CritiWatch.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dr. Tan • 10:05 Today"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Post-op cardiac recovery stable initially. Monitoring for potential fluid overload."
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                        android:layout_marginTop="4dp"
+                        android:text=""
+                        android:textSize="11sp"
+                        android:visibility="gone" />
 
                     <Button
-                        android:id="@+id/btnAddNote"
+                        android:id="@+id/btnAddClinicalNote"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -370,7 +347,7 @@
 
                 <Button
                     android:id="@+id/btnRunPrediction"
-                    style="@style/Widget.CritiWatch.Button.Secondary"
+                    style="@style/Widget.CritiWatch.Button"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
                     android:layout_marginBottom="@dimen/spacing_md"

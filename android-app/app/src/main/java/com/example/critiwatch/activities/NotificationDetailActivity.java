@@ -1,5 +1,6 @@
 package com.example.critiwatch;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -50,6 +51,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
     private String alertDescription;
     private int predictionConfidence;
     private boolean alertAcknowledged;
+    private boolean alertEscalated;
     private VitalSign latestVital;
 
     @Override
@@ -169,7 +171,11 @@ public class NotificationDetailActivity extends AppCompatActivity {
         }
         if (tvAlertSubtitle != null) {
             String subtitleTime = DateTimeUtils.toRelativeTime(alertTimestamp);
-            tvAlertSubtitle.setText(alertType + " • " + subtitleTime + " • #" + alertId);
+            String subtitle = alertType + " • " + subtitleTime + " • #" + alertId;
+            if (alertEscalated) {
+                subtitle += " • Escalated";
+            }
+            tvAlertSubtitle.setText(subtitle);
         }
         if (tvAlertDescription != null) {
             tvAlertDescription.setText(alertDescription);
@@ -276,12 +282,36 @@ public class NotificationDetailActivity extends AppCompatActivity {
             acknowledgeButton.setOnClickListener(v -> acknowledgeCurrentAlert(acknowledgeButton));
         }
 
-        Button btnActivateResponse = findViewById(R.id.btnActivateResponse);
-        if (btnActivateResponse != null) {
-            btnActivateResponse.setOnClickListener(v ->
-                    Toast.makeText(this, "Rapid response workflow will be wired next", Toast.LENGTH_SHORT).show()
-            );
+        Button btnEscalateAlert = findViewById(R.id.btnEscalateAlert);
+        if (btnEscalateAlert == null) {
+            btnEscalateAlert = findButtonByAnyIdName("btnActivateResponse");
         }
+        if (btnEscalateAlert != null) {
+            btnEscalateAlert.setOnClickListener(v -> showEscalateConfirmationDialog());
+        }
+
+        Button btnDismissAlert = findViewById(R.id.btnDismissAlert);
+        if (btnDismissAlert != null) {
+            btnDismissAlert.setOnClickListener(v -> finish());
+        }
+    }
+
+    private void showEscalateConfirmationDialog() {
+        if (alertEscalated) {
+            Toast.makeText(this, "Alert already escalated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Escalate Alert")
+                .setMessage("Send this alert to the ICU supervisor? (simulated action)")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Escalate", (dialog, which) -> {
+                    alertEscalated = true;
+                    bindAlertHeader();
+                    Toast.makeText(this, "Alert escalated to ICU supervisor", Toast.LENGTH_LONG).show();
+                })
+                .show();
     }
 
     private void openPatientProfile() {

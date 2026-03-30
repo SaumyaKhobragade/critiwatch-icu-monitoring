@@ -7,12 +7,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "critiwatch_local.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     public static final String TABLE_PATIENTS = "patients";
     public static final String TABLE_VITAL_SIGNS = "vital_signs";
     public static final String TABLE_PREDICTIONS = "predictions";
     public static final String TABLE_ALERTS = "alerts";
+    public static final String TABLE_PATIENT_NOTES = "patient_notes";
 
     public static final String COL_ID = "id";
 
@@ -50,6 +51,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_ALERT_UNIT = "unit";
     public static final String COL_ALERT_PREDICTION_CONFIDENCE = "prediction_confidence";
     public static final String COL_ALERT_ACKNOWLEDGED = "acknowledged";
+
+    public static final String COL_NOTE_PATIENT_ID = "patient_id";
+    public static final String COL_NOTE_TEXT = "note_text";
+    public static final String COL_NOTE_CREATED_AT = "created_at";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -113,14 +118,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "FOREIGN KEY(" + COL_ALERT_PATIENT_ID + ") REFERENCES " + TABLE_PATIENTS + "(" + COL_ID + ") ON DELETE CASCADE"
                 + ");";
 
+        String createPatientNotesTable = "CREATE TABLE " + TABLE_PATIENT_NOTES + " ("
+                + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COL_NOTE_PATIENT_ID + " INTEGER NOT NULL, "
+                + COL_NOTE_TEXT + " TEXT NOT NULL, "
+                + COL_NOTE_CREATED_AT + " TEXT, "
+                + "FOREIGN KEY(" + COL_NOTE_PATIENT_ID + ") REFERENCES " + TABLE_PATIENTS + "(" + COL_ID + ") ON DELETE CASCADE"
+                + ");";
+
         db.execSQL(createPatientsTable);
         db.execSQL(createVitalSignsTable);
         db.execSQL(createPredictionsTable);
         db.execSQL(createAlertsTable);
+        db.execSQL(createPatientNotesTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PATIENT_NOTES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ALERTS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PREDICTIONS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_VITAL_SIGNS);
