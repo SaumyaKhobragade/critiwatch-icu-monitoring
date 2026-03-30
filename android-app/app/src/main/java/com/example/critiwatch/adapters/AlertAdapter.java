@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.critiwatch.R;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.utils.Constants;
+import com.example.critiwatch.utils.DateTimeUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -46,8 +47,9 @@ public class AlertAdapter extends RecyclerView.Adapter<AlertAdapter.AlertViewHol
     public void onBindViewHolder(@NonNull AlertViewHolder holder, int position) {
         AlertItem item = alertItems.get(position);
 
-        holder.tvSeverityBadge.setText(item.getSeverity().toUpperCase(Locale.US));
-        holder.tvAlertTimestamp.setText(item.getTimestamp());
+        String severity = item.getSeverity() == null ? Constants.RISK_WARNING : item.getSeverity();
+        holder.tvSeverityBadge.setText(severity.toUpperCase(Locale.US));
+        holder.tvAlertTimestamp.setText(DateTimeUtils.toRelativeTime(item.getTimestamp()));
         holder.tvAlertValue.setText(item.getValue());
         holder.tvAlertUnit.setText(item.getUnit());
         holder.tvAlertType.setText(item.getType());
@@ -56,10 +58,10 @@ public class AlertAdapter extends RecyclerView.Adapter<AlertAdapter.AlertViewHol
 
         int chipBackgroundRes;
         int severityColor;
-        if (Constants.RISK_CRITICAL.equalsIgnoreCase(item.getSeverity())) {
+        if (Constants.RISK_CRITICAL.equalsIgnoreCase(severity)) {
             chipBackgroundRes = R.drawable.bg_chip_critical;
             severityColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.status_critical);
-        } else if (Constants.RISK_WARNING.equalsIgnoreCase(item.getSeverity())) {
+        } else if (Constants.RISK_WARNING.equalsIgnoreCase(severity)) {
             chipBackgroundRes = R.drawable.bg_chip_warning;
             severityColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.status_warning);
         } else {
@@ -71,6 +73,9 @@ public class AlertAdapter extends RecyclerView.Adapter<AlertAdapter.AlertViewHol
         holder.tvSeverityBadge.setTextColor(severityColor);
         holder.tvAlertValue.setTextColor(severityColor);
         holder.viewSeverityIndicator.setBackgroundColor(severityColor);
+        holder.btnMarkResolved.setEnabled(!item.isAcknowledged());
+        holder.btnMarkResolved.setAlpha(item.isAcknowledged() ? 0.7f : 1.0f);
+        holder.btnMarkResolved.setText(item.isAcknowledged() ? "Resolved" : "Mark Resolved");
 
         View.OnClickListener alertClick = v -> {
             if (onAlertActionListener != null) {

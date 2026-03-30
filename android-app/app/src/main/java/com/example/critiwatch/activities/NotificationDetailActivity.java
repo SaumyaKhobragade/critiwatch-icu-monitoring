@@ -49,6 +49,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
     private String alertTimestamp;
     private String alertDescription;
     private int predictionConfidence;
+    private boolean alertAcknowledged;
     private VitalSign latestVital;
 
     @Override
@@ -114,6 +115,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
         alertTimestamp = safeOrDash(alert.getTimestamp());
         alertDescription = safeOrDefault(alert.getDescription(), "No alert description available.");
         predictionConfidence = Math.max(0, alert.getPredictionConfidence());
+        alertAcknowledged = alert.isAcknowledged();
 
         patientId = alert.getPatientId();
         patientName = safeOrEmpty(alert.getPatientName());
@@ -156,8 +158,14 @@ public class NotificationDetailActivity extends AppCompatActivity {
         LinearLayout llAlertHeader = findViewById(R.id.llAlertHeader);
 
         if (tvAlertTitle != null) {
-            tvAlertTitle.setText(alertSeverity.toUpperCase(Locale.US) + " ALERT");
-            tvAlertTitle.setTextColor(ContextCompat.getColor(this, getSeverityColor(alertSeverity)));
+            String title = alertSeverity.toUpperCase(Locale.US) + " ALERT";
+            if (alertAcknowledged) {
+                title += " (ACKNOWLEDGED)";
+            }
+            tvAlertTitle.setText(title);
+            tvAlertTitle.setTextColor(ContextCompat.getColor(this, alertAcknowledged
+                    ? R.color.text_secondary
+                    : getSeverityColor(alertSeverity)));
         }
         if (tvAlertSubtitle != null) {
             String subtitleTime = DateTimeUtils.toRelativeTime(alertTimestamp);
@@ -167,7 +175,9 @@ public class NotificationDetailActivity extends AppCompatActivity {
             tvAlertDescription.setText(alertDescription);
         }
         if (llAlertHeader != null) {
-            if (Constants.RISK_CRITICAL.equalsIgnoreCase(alertSeverity)) {
+            if (alertAcknowledged) {
+                llAlertHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.surface_secondary));
+            } else if (Constants.RISK_CRITICAL.equalsIgnoreCase(alertSeverity)) {
                 llAlertHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.soft_red));
             } else if (Constants.RISK_WARNING.equalsIgnoreCase(alertSeverity)) {
                 llAlertHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.soft_amber));
@@ -175,6 +185,11 @@ public class NotificationDetailActivity extends AppCompatActivity {
                 llAlertHeader.setBackgroundColor(ContextCompat.getColor(this, R.color.soft_green));
             }
         }
+
+        setTextIfPresent("tvAlertSeverity", alertSeverity);
+        setTextIfPresent("tvAlertMessage", alertDescription);
+        setTextIfPresent("tvAlertTimestamp", DateTimeUtils.toRelativeTime(alertTimestamp));
+        setTextIfPresent("tvPatientName", safeOrDefault(patientName, "Unknown Patient"));
     }
 
     private void bindPatientSummary() {
@@ -242,25 +257,23 @@ public class NotificationDetailActivity extends AppCompatActivity {
         }
 
         Button btnViewPatientProfile = findViewById(R.id.btnViewPatientProfile);
+        if (btnViewPatientProfile == null) {
+            btnViewPatientProfile = findButtonByAnyIdName("btnOpenPatientDetails");
+        }
         if (btnViewPatientProfile != null) {
             btnViewPatientProfile.setOnClickListener(v -> openPatientProfile());
         } else {
             Toast.makeText(this, "Missing view id: btnViewPatientProfile", Toast.LENGTH_LONG).show();
         }
 
-        Button btnAcknowledgeAlert = findViewById(R.id.btnAcknowledgeAlert);
-        if (btnAcknowledgeAlert != null) {
-            btnAcknowledgeAlert.setOnClickListener(v -> {
-                int id = parseId(alertId);
-                if (id > 0) {
-                    alertRepository.acknowledgeAlert(id);
-                }
-                Toast.makeText(this, "Alert #" + alertId + " acknowledged", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, AlertsActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-            });
+        Button resolvedAcknowledgeButton = findViewById(R.id.btnAcknowledgeAlert);
+        if (resolvedAcknowledgeButton == null) {
+            resolvedAcknowledgeButton = findButtonByAnyIdName("btnAcknowledge");
+        }
+        if (resolvedAcknowledgeButton != null) {
+            final Button acknowledgeButton = resolvedAcknowledgeButton;
+            updateAcknowledgeButtonState(acknowledgeButton);
+            acknowledgeButton.setOnClickListener(v -> acknowledgeCurrentAlert(acknowledgeButton));
         }
 
         Button btnActivateResponse = findViewById(R.id.btnActivateResponse);
@@ -280,6 +293,66 @@ public class NotificationDetailActivity extends AppCompatActivity {
         Intent intent = new Intent(this, PatientDetailActivity.class);
         intent.putExtra(Constants.EXTRA_PATIENT_ID, patientId);
         startActivity(intent);
+    }
+
+    private void acknowledgeCurrentAlert(Button acknowledgeButton) {
+        if (alertAcknowledged) {
+            Toast.makeText(this, "Alert already acknowledged", Toast.LENGTH_SHORT).show();
+            updateAcknowledgeButtonState(acknowledgeButton);
+            return;
+        }
+
+        int id = parseId(alertId);
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid alert id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean success = alertRepository.acknowledgeAlert(id);
+        if (!success) {
+            Toast.makeText(this, "Unable to acknowledge alert", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        alertAcknowledged = true;
+        Toast.makeText(this, "Alert #" + alertId + " acknowledged", Toast.LENGTH_SHORT).show();
+        updateAcknowledgeButtonState(acknowledgeButton);
+        loadAlertFromDatabase(id);
+        bindAlertHeader();
+    }
+
+    private void updateAcknowledgeButtonState(Button button) {
+        if (button == null) {
+            return;
+        }
+        button.setEnabled(!alertAcknowledged);
+        if (alertAcknowledged) {
+            button.setText("Acknowledged");
+            button.setAlpha(0.7f);
+        } else {
+            button.setText("Acknowledge Alert");
+            button.setAlpha(1.0f);
+        }
+    }
+
+    private Button findButtonByAnyIdName(String idName) {
+        int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+        if (viewId == 0) {
+            return null;
+        }
+        android.view.View view = findViewById(viewId);
+        return view instanceof Button ? (Button) view : null;
+    }
+
+    private void setTextIfPresent(String idName, String value) {
+        int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+        if (viewId == 0) {
+            return;
+        }
+        android.view.View view = findViewById(viewId);
+        if (view instanceof TextView) {
+            ((TextView) view).setText(safeOrDefault(value, "--"));
+        }
     }
 
     private int getSeverityColor(String severity) {

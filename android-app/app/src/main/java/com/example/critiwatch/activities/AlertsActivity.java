@@ -95,6 +95,10 @@ public class AlertsActivity extends AppCompatActivity {
                 }
 
                 int alertId = parseId(alertItem.getId());
+                if (alertId <= 0) {
+                    Toast.makeText(AlertsActivity.this, "Invalid alert id", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 boolean success = alertRepository.acknowledgeAlert(alertId);
                 Toast.makeText(AlertsActivity.this,
                         success ? "Alert resolved" : "Unable to resolve alert",
@@ -218,8 +222,13 @@ public class AlertsActivity extends AppCompatActivity {
     }
 
     private void openAlertDetail(AlertItem alertItem) {
+        int alertId = parseId(alertItem.getId());
+        if (alertId <= 0) {
+            Toast.makeText(this, "Invalid alert details", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent(this, NotificationDetailActivity.class);
-        intent.putExtra(Constants.EXTRA_ALERT_ID, alertItem.getId());
+        intent.putExtra(Constants.EXTRA_ALERT_ID, String.valueOf(alertId));
         startActivity(intent);
     }
 

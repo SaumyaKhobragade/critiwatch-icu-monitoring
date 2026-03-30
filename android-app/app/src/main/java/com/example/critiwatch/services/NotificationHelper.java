@@ -19,11 +19,13 @@ import com.example.critiwatch.R;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.utils.Constants;
 
+import java.util.Locale;
+
 public class NotificationHelper {
 
     public static final String CHANNEL_ID_ALERTS = "critiwatch_alerts_channel";
-    private static final String CHANNEL_NAME_ALERTS = "CritiWatch Alerts";
-    private static final String CHANNEL_DESC_ALERTS = "Warning and critical ICU alerts";
+    private static final String CHANNEL_NAME_ALERTS = "Critical Alerts";
+    private static final String CHANNEL_DESC_ALERTS = "Warning and critical ICU monitoring alerts";
 
     private NotificationHelper() {
     }
@@ -67,11 +69,11 @@ public class NotificationHelper {
         }
 
         int notificationId = parseNotificationId(alertItem.getId());
-        String severity = alertItem.getSeverity() == null ? "Alert" : alertItem.getSeverity().toUpperCase();
-        String title = severity + " • " + safeValue(alertItem.getType(), "Prediction Alert");
+        String severity = toTitleCase(safeValue(alertItem.getSeverity(), "Warning"));
+        String title = severity + " Alert: " + safeValue(alertItem.getType(), "Prediction Alert");
         String patientName = safeValue(alertItem.getPatientName(), "Unknown Patient");
         String description = safeValue(alertItem.getDescription(), "Risk threshold crossed.");
-        String message = patientName + " • " + description;
+        String message = buildShortMessage(patientName, description);
 
         Intent tapIntent = buildTapIntent(context, alertItem);
 
@@ -89,7 +91,7 @@ public class NotificationHelper {
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(resolvePriority(alertItem.getSeverity()))
                 .setCategory(NotificationCompat.CATEGORY_ALARM);
 
         NotificationManagerCompat.from(context).notify(notificationId, builder.build());
@@ -140,5 +142,28 @@ public class NotificationHelper {
             return fallback;
         }
         return value;
+    }
+
+    private static int resolvePriority(String severity) {
+        if (severity != null && severity.trim().equalsIgnoreCase(Constants.RISK_CRITICAL)) {
+            return NotificationCompat.PRIORITY_MAX;
+        }
+        return NotificationCompat.PRIORITY_HIGH;
+    }
+
+    private static String buildShortMessage(String patientName, String description) {
+        String compact = description == null ? "" : description.trim();
+        if (compact.length() > 100) {
+            compact = compact.substring(0, 97) + "...";
+        }
+        return patientName + " • " + compact;
+    }
+
+    private static String toTitleCase(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            return "Alert";
+        }
+        String normalized = input.trim().toLowerCase(Locale.US);
+        return Character.toUpperCase(normalized.charAt(0)) + normalized.substring(1);
     }
 }

@@ -170,10 +170,10 @@ public class RiskUtils {
             return "High Heart Rate";
         }
         if (combined.contains("tachypnea") || combined.contains("respiratory")) {
-            return "Respiratory Distress Alert";
+            return "High Respiratory Rate";
         }
         if (combined.contains("fever")) {
-            return "Fever Alert";
+            return "High Temperature";
         }
         if (reasons != null && reasons.size() >= 2) {
             return "Multi-Parameter Risk Alert";

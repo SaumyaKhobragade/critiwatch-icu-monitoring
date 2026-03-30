@@ -41,6 +41,7 @@ import java.util.Locale;
 public class PatientDetailActivity extends AppCompatActivity {
 
     private static final int REQ_POST_NOTIFICATIONS = 2101;
+    private static final int DUPLICATE_ALERT_WINDOW_MINUTES = 10;
 
     private AlertRepository alertRepository;
     private PatientRepository patientRepository;
@@ -408,6 +409,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         temperature = latestVital.getTemperature();
 
         boolean alertCreated = false;
+        boolean duplicateSuppressed = false;
         boolean notificationSent = false;
         if (!Constants.RISK_STABLE.equalsIgnoreCase(evaluation.getRiskLevel())) {
             AlertItem alertItem = new AlertItem(
@@ -428,8 +430,11 @@ public class PatientDetailActivity extends AppCompatActivity {
             alertItem.setPatientBed(patientBed);
             alertItem.setPatientRisk(patientRisk);
 
-            long alertId = alertRepository.addAlert(alertItem);
-            if (alertId > 0) {
+            long alertId = alertRepository.addAlertIfNotRecentDuplicate(alertItem, DUPLICATE_ALERT_WINDOW_MINUTES);
+            if (alertId == -1L) {
+                duplicateSuppressed = true;
+                latestAlert = alertRepository.getLatestAlertByPatientId(id);
+            } else if (alertId > 0) {
                 alertCreated = true;
                 latestAlert = alertRepository.getAlertById((int) alertId);
                 if (latestAlert == null) {
@@ -449,6 +454,8 @@ public class PatientDetailActivity extends AppCompatActivity {
         String toastMessage = "Prediction updated: " + patientRisk;
         if (alertCreated) {
             toastMessage += notificationSent ? " (alert + notification sent)" : " (alert created)";
+        } else if (duplicateSuppressed) {
+            toastMessage += " (duplicate alert suppressed)";
         }
         Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
     }
@@ -464,6 +471,12 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (alertType.contains("heart")) {
             return String.valueOf(vitalSign.getHeartRate());
         }
+        if (alertType.contains("respiratory")) {
+            return String.valueOf(vitalSign.getRespiratoryRate());
+        }
+        if (alertType.contains("fever") || alertType.contains("temperature")) {
+            return String.format(Locale.US, "%.1f", vitalSign.getTemperature());
+        }
         return String.format(Locale.US, "%.0f", evaluation.getRiskScore());
     }
 
@@ -477,6 +490,12 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
         if (alertType.contains("heart")) {
             return "BPM";
+        }
+        if (alertType.contains("respiratory")) {
+            return "/min";
+        }
+        if (alertType.contains("fever") || alertType.contains("temperature")) {
+            return "C";
         }
         return "score";
     }
@@ -512,6 +531,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         Toast.makeText(this, success ? "Alert acknowledged" : "Unable to acknowledge alert", Toast.LENGTH_SHORT).show();
         if (success) {
             latestAlert = alertRepository.getLatestAlertByPatientId(parseId(patientId));
+            bindPatientHeader();
         }
     }
 
@@ -559,8 +579,11 @@ public class PatientDetailActivity extends AppCompatActivity {
 
     private void openAlertDetail() {
         if (latestAlert == null) {
-            Toast.makeText(this, "No alert available for this patient", Toast.LENGTH_SHORT).show();
-            return;
+            latestAlert = alertRepository.getLatestAlertByPatientId(parseId(patientId));
+            if (latestAlert == null) {
+                Toast.makeText(this, "No alert available for this patient", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         Intent intent = new Intent(this, NotificationDetailActivity.class);

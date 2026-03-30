@@ -104,6 +104,27 @@ public class AlertDao {
         return allAlerts.isEmpty() ? null : allAlerts.get(0);
     }
 
+    public AlertItem getLatestUnacknowledgedAlertByType(int patientId, String alertType, String severity) {
+        List<AlertItem> alerts = runJoinedAlertQuery(
+                "SELECT a.*, p.name AS p_name, p.age AS p_age, p.sex AS p_sex, "
+                        + "p.bed_number AS p_bed, p.risk_level AS p_risk "
+                        + "FROM " + DatabaseHelper.TABLE_ALERTS + " a "
+                        + "LEFT JOIN " + DatabaseHelper.TABLE_PATIENTS + " p ON a."
+                        + DatabaseHelper.COL_ALERT_PATIENT_ID + " = p." + DatabaseHelper.COL_ID + " "
+                        + "WHERE a." + DatabaseHelper.COL_ALERT_PATIENT_ID + " = ? "
+                        + "AND a." + DatabaseHelper.COL_ALERT_TYPE + " = ? "
+                        + "AND a." + DatabaseHelper.COL_ALERT_SEVERITY + " = ? "
+                        + "AND a." + DatabaseHelper.COL_ALERT_ACKNOWLEDGED + " = 0 "
+                        + "ORDER BY a." + DatabaseHelper.COL_ALERT_TIMESTAMP + " DESC LIMIT 1",
+                new String[]{
+                        String.valueOf(patientId),
+                        safe(alertType),
+                        safe(severity)
+                }
+        );
+        return alerts.isEmpty() ? null : alerts.get(0);
+    }
+
     public int acknowledgeAlert(int alertId) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -186,5 +207,9 @@ public class AlertDao {
         } catch (NumberFormatException ignored) {
             return -1;
         }
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 }

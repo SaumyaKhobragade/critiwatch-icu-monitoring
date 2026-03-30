@@ -45,6 +45,7 @@ import java.util.Locale;
 public class AddPatientActivity extends AppCompatActivity {
 
     private static final int REQ_POST_NOTIFICATIONS = 2102;
+    private static final int DUPLICATE_ALERT_WINDOW_MINUTES = 10;
     private static final int MIN_AGE = 0;
     private static final int MAX_AGE = 130;
     private static final int MIN_HEART_RATE = 20;
@@ -279,8 +280,8 @@ public class AddPatientActivity extends AppCompatActivity {
                     riskLevel,
                     evaluationResult.getSummary(),
                     capturedAt,
-                    String.valueOf(heartRate),
-                    "BPM",
+                    buildPrimaryAlertValue(evaluationResult, initialVital),
+                    buildPrimaryAlertUnit(evaluationResult),
                     (int) Math.round(riskScore),
                     false
             );
@@ -290,7 +291,7 @@ public class AddPatientActivity extends AppCompatActivity {
             alertItem.setPatientBed(bedNumber);
             alertItem.setPatientRisk(riskLevel);
 
-            long alertId = alertRepository.addAlert(alertItem);
+            long alertId = alertRepository.addAlertIfNotRecentDuplicate(alertItem, DUPLICATE_ALERT_WINDOW_MINUTES);
             if (alertId > 0) {
                 alertCreated = true;
                 alertItem.setId(String.valueOf(alertId));
@@ -298,6 +299,8 @@ public class AddPatientActivity extends AppCompatActivity {
                 if (!notificationSent) {
                     requestNotificationPermissionIfNeeded();
                 }
+            } else if (alertId == -1L) {
+                Toast.makeText(this, "Duplicate alert suppressed for this patient", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -313,6 +316,46 @@ public class AddPatientActivity extends AppCompatActivity {
             Toast.makeText(this, "Patient saved to local database", Toast.LENGTH_SHORT).show();
         }
         finish();
+    }
+
+    private String buildPrimaryAlertValue(RiskUtils.EvaluationResult evaluationResult, VitalSign vitalSign) {
+        String alertType = evaluationResult.getAlertType().toLowerCase(Locale.US);
+        if (alertType.contains("spo2")) {
+            return String.valueOf(vitalSign.getSpo2());
+        }
+        if (alertType.contains("blood pressure")) {
+            return vitalSign.getBloodPressure();
+        }
+        if (alertType.contains("heart")) {
+            return String.valueOf(vitalSign.getHeartRate());
+        }
+        if (alertType.contains("respiratory")) {
+            return String.valueOf(vitalSign.getRespiratoryRate());
+        }
+        if (alertType.contains("fever") || alertType.contains("temperature")) {
+            return String.format(Locale.US, "%.1f", vitalSign.getTemperature());
+        }
+        return String.format(Locale.US, "%.0f", evaluationResult.getRiskScore());
+    }
+
+    private String buildPrimaryAlertUnit(RiskUtils.EvaluationResult evaluationResult) {
+        String alertType = evaluationResult.getAlertType().toLowerCase(Locale.US);
+        if (alertType.contains("spo2")) {
+            return "%";
+        }
+        if (alertType.contains("blood pressure")) {
+            return "mmHg";
+        }
+        if (alertType.contains("heart")) {
+            return "BPM";
+        }
+        if (alertType.contains("respiratory")) {
+            return "/min";
+        }
+        if (alertType.contains("fever") || alertType.contains("temperature")) {
+            return "C";
+        }
+        return "score";
     }
 
     private boolean validateRequiredField(int editTextId, String fieldLabel) {
