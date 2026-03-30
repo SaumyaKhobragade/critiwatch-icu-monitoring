@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -27,17 +28,41 @@ import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.services.NotificationHelper;
+import com.example.critiwatch.services.ValidationService;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.RiskUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class AddPatientActivity extends AppCompatActivity {
 
     private static final int REQ_POST_NOTIFICATIONS = 2102;
+    private static final int MIN_AGE = 0;
+    private static final int MAX_AGE = 130;
+    private static final int MIN_HEART_RATE = 20;
+    private static final int MAX_HEART_RATE = 250;
+    private static final int MIN_SPO2 = 50;
+    private static final int MAX_SPO2 = 100;
+    private static final int MIN_SYSTOLIC_BP = 40;
+    private static final int MAX_SYSTOLIC_BP = 260;
+    private static final int MIN_DIASTOLIC_BP = 20;
+    private static final int MAX_DIASTOLIC_BP = 180;
+    private static final int MIN_RESPIRATORY_RATE = 5;
+    private static final int MAX_RESPIRATORY_RATE = 80;
+    private static final double MIN_TEMPERATURE = 25.0d;
+    private static final double MAX_TEMPERATURE = 113.0d;
+    private static final double MIN_HEIGHT_CM = 30.0d;
+    private static final double MAX_HEIGHT_CM = 250.0d;
+    private static final double MIN_WEIGHT_KG = 1.0d;
+    private static final double MAX_WEIGHT_KG = 400.0d;
 
     private PatientRepository patientRepository;
     private AlertRepository alertRepository;
@@ -68,6 +93,11 @@ public class AddPatientActivity extends AppCompatActivity {
             Toast.makeText(this, "Missing view id: ivBack", Toast.LENGTH_LONG).show();
         }
 
+        Button btnBack = findOptionalButtonByName("btnBack");
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
         Button btnCancel = findViewById(R.id.btnCancel);
         if (btnCancel != null) {
             btnCancel.setOnClickListener(v -> finish());
@@ -76,8 +106,16 @@ public class AddPatientActivity extends AppCompatActivity {
         }
 
         Button btnRegisterPatient = findViewById(R.id.btnRegisterPatient);
+        if (btnRegisterPatient == null) {
+            btnRegisterPatient = findOptionalButtonByName("btnSavePatient");
+        }
         if (btnRegisterPatient != null) {
             btnRegisterPatient.setOnClickListener(v -> attemptRegisterPatient());
+        }
+
+        Button btnResetPatient = findOptionalButtonByName("btnResetPatient");
+        if (btnResetPatient != null) {
+            btnResetPatient.setOnClickListener(v -> resetForm());
         }
 
         View btnScanWristband = findViewById(R.id.btnScanWristband);
@@ -157,19 +195,28 @@ public class AddPatientActivity extends AppCompatActivity {
         }
 
         String name = getTextValue(R.id.etPatientName);
-        int age = parseIntValue(R.id.etAge);
+        Integer age = parseRequiredIntField(R.id.etAge, "Age", MIN_AGE, MAX_AGE);
         String sex = getSpinnerValue(R.id.spinnerSex);
         String ward = getSpinnerValue(R.id.spinnerWard);
         String bedNumber = getTextValue(R.id.etBedNumber);
 
-        int heartRate = parseIntValue(R.id.etHeartRate);
-        int spo2 = parseIntValue(R.id.etSpO2);
-        int systolicBp = parseIntValue(R.id.etSystolicBP);
-        int diastolicBp = parseIntValue(R.id.etDiastolicBP);
-        int respiratoryRate = parseIntValue(R.id.etRespiratoryRate);
-        double temperature = parseDoubleValue(R.id.etTemperature);
-        double heightCm = parseDoubleValue(R.id.etHeight);
-        double weightKg = parseDoubleValue(R.id.etWeight);
+        Integer heartRate = parseRequiredIntField(R.id.etHeartRate, "Heart rate", MIN_HEART_RATE, MAX_HEART_RATE);
+        Integer spo2 = parseRequiredIntField(R.id.etSpO2, "SpO2", MIN_SPO2, MAX_SPO2);
+        Integer systolicBp = parseRequiredIntField(R.id.etSystolicBP, "Systolic BP", MIN_SYSTOLIC_BP, MAX_SYSTOLIC_BP);
+        Integer diastolicBp = parseRequiredIntField(R.id.etDiastolicBP, "Diastolic BP", MIN_DIASTOLIC_BP, MAX_DIASTOLIC_BP);
+        Integer respiratoryRate = parseRequiredIntField(R.id.etRespiratoryRate, "Respiratory rate", MIN_RESPIRATORY_RATE, MAX_RESPIRATORY_RATE);
+        Double temperature = parseRequiredDoubleField(R.id.etTemperature, "Temperature", MIN_TEMPERATURE, MAX_TEMPERATURE);
+        Double heightCm = parseRequiredDoubleField(R.id.etHeight, "Height", MIN_HEIGHT_CM, MAX_HEIGHT_CM);
+        Double weightKg = parseRequiredDoubleField(R.id.etWeight, "Weight", MIN_WEIGHT_KG, MAX_WEIGHT_KG);
+
+        if (age == null || heartRate == null || spo2 == null || systolicBp == null
+                || diastolicBp == null || respiratoryRate == null || temperature == null
+                || heightCm == null || weightKg == null) {
+            Toast.makeText(this, "Please correct the highlighted values", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String capturedAt = resolveTimestampForNewEntry();
 
         RiskUtils.EvaluationResult evaluationResult = RiskUtils.evaluate(
                 heartRate,
@@ -190,7 +237,7 @@ public class AddPatientActivity extends AppCompatActivity {
                 ward,
                 bedNumber,
                 riskLevel,
-                DateTimeUtils.now()
+                capturedAt
         );
 
         VitalSign initialVital = new VitalSign(
@@ -204,7 +251,7 @@ public class AddPatientActivity extends AppCompatActivity {
                 temperature,
                 heightCm,
                 weightKg,
-                DateTimeUtils.now()
+                capturedAt
         );
 
         Prediction prediction = new Prediction(
@@ -213,7 +260,7 @@ public class AddPatientActivity extends AppCompatActivity {
                 riskLevel,
                 riskScore,
                 evaluationResult.getSummary(),
-                DateTimeUtils.now()
+                capturedAt
         );
 
         long patientId = patientRepository.addPatient(patient, initialVital, prediction);
@@ -231,7 +278,7 @@ public class AddPatientActivity extends AppCompatActivity {
                     evaluationResult.getAlertType(),
                     riskLevel,
                     evaluationResult.getSummary(),
-                    DateTimeUtils.now(),
+                    capturedAt,
                     String.valueOf(heartRate),
                     "BPM",
                     (int) Math.round(riskScore),
@@ -314,22 +361,173 @@ public class AddPatientActivity extends AppCompatActivity {
         return spinner.getSelectedItem().toString();
     }
 
-    private int parseIntValue(int editTextId) {
-        String value = getTextValue(editTextId);
-        try {
-            return Integer.parseInt(value);
-        } catch (Exception ignored) {
-            return 0;
+    private Integer parseRequiredIntField(int editTextId, String fieldLabel, int min, int max) {
+        EditText field = findViewById(editTextId);
+        if (field == null) {
+            Toast.makeText(this, "Missing view id: " + getResources().getResourceEntryName(editTextId), Toast.LENGTH_LONG).show();
+            return null;
+        }
+        Integer value = ValidationService.tryParseInt(field.getText().toString());
+        if (value == null) {
+            field.setError("Enter a valid number for " + fieldLabel);
+            field.requestFocus();
+            return null;
+        }
+        if (!ValidationService.isInRange(value, min, max)) {
+            field.setError(fieldLabel + " must be between " + min + " and " + max);
+            field.requestFocus();
+            return null;
+        }
+        return value;
+    }
+
+    private Double parseRequiredDoubleField(int editTextId, String fieldLabel, double min, double max) {
+        EditText field = findViewById(editTextId);
+        if (field == null) {
+            Toast.makeText(this, "Missing view id: " + getResources().getResourceEntryName(editTextId), Toast.LENGTH_LONG).show();
+            return null;
+        }
+        Double value = ValidationService.tryParseDouble(field.getText().toString());
+        if (value == null) {
+            field.setError("Enter a valid value for " + fieldLabel);
+            field.requestFocus();
+            return null;
+        }
+        if (!ValidationService.isInRange(value, min, max)) {
+            field.setError(fieldLabel + " must be between " + formatNumber(min) + " and " + formatNumber(max));
+            field.requestFocus();
+            return null;
+        }
+        return value;
+    }
+
+    private String resolveTimestampForNewEntry() {
+        String dateText = getOptionalTextByIdName("tvSelectedDate", "etDate", "tvDate");
+        String timeText = getOptionalTextByIdName("tvSelectedTime", "etTime", "tvTime");
+
+        if (ValidationService.isBlank(dateText) || ValidationService.isBlank(timeText)) {
+            return DateTimeUtils.now();
+        }
+
+        String dateTimeText = dateText.trim() + " " + timeText.trim();
+        List<String> patterns = Arrays.asList(
+                "dd/MM/yyyy HH:mm",
+                "dd-MM-yyyy HH:mm",
+                "yyyy-MM-dd HH:mm",
+                "MM/dd/yyyy HH:mm",
+                "dd/MM/yyyy hh:mm a",
+                "dd-MM-yyyy hh:mm a",
+                "yyyy-MM-dd hh:mm a",
+                "MM/dd/yyyy hh:mm a"
+        );
+
+        for (String pattern : patterns) {
+            try {
+                SimpleDateFormat parser = new SimpleDateFormat(pattern, Locale.US);
+                parser.setLenient(false);
+                Date parsed = parser.parse(dateTimeText);
+                if (parsed != null) {
+                    return DateTimeUtils.format(parsed);
+                }
+            } catch (ParseException ignored) {
+                // Try next format.
+            }
+        }
+
+        Toast.makeText(this, "Invalid date/time format. Using current time.", Toast.LENGTH_SHORT).show();
+        return DateTimeUtils.now();
+    }
+
+    private String getOptionalTextByIdName(String... idNames) {
+        for (String idName : idNames) {
+            int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+            if (viewId == 0) {
+                continue;
+            }
+            View view = findViewById(viewId);
+            if (view instanceof TextView) {
+                String value = ((TextView) view).getText().toString();
+                if (!ValidationService.isBlank(value)) {
+                    return value.trim();
+                }
+            }
+        }
+        return "";
+    }
+
+    private Button findOptionalButtonByName(String idName) {
+        int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+        if (viewId == 0) {
+            return null;
+        }
+        View view = findViewById(viewId);
+        return view instanceof Button ? (Button) view : null;
+    }
+
+    private void resetForm() {
+        int[] editIds = new int[]{
+                R.id.etPatientName,
+                R.id.etPatientId,
+                R.id.etAge,
+                R.id.etBedNumber,
+                R.id.etDiagnosis,
+                R.id.etHeartRate,
+                R.id.etSpO2,
+                R.id.etSystolicBP,
+                R.id.etDiastolicBP,
+                R.id.etRespiratoryRate,
+                R.id.etTemperature,
+                R.id.etHeight,
+                R.id.etWeight
+        };
+
+        for (int editId : editIds) {
+            EditText field = findViewById(editId);
+            if (field != null) {
+                field.setText("");
+                field.setError(null);
+            }
+        }
+
+        Spinner spinnerSex = findViewById(R.id.spinnerSex);
+        if (spinnerSex != null) {
+            spinnerSex.setSelection(0);
+        }
+
+        Spinner spinnerWard = findViewById(R.id.spinnerWard);
+        if (spinnerWard != null) {
+            spinnerWard.setSelection(0);
+        }
+
+        clearOptionalTextByIdName("tvSelectedDate", "etDate", "tvDate");
+        clearOptionalTextByIdName("tvSelectedTime", "etTime", "tvTime");
+
+        EditText etPatientName = findViewById(R.id.etPatientName);
+        if (etPatientName != null) {
+            etPatientName.requestFocus();
+        }
+
+        Toast.makeText(this, "Form reset", Toast.LENGTH_SHORT).show();
+    }
+
+    private void clearOptionalTextByIdName(String... idNames) {
+        for (String idName : idNames) {
+            int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+            if (viewId == 0) {
+                continue;
+            }
+            View view = findViewById(viewId);
+            if (view instanceof TextView) {
+                ((TextView) view).setText("");
+            }
         }
     }
 
-    private double parseDoubleValue(int editTextId) {
-        String value = getTextValue(editTextId);
-        try {
-            return Double.parseDouble(value);
-        } catch (Exception ignored) {
-            return 0d;
+    private String formatNumber(double value) {
+        if (value == (long) value) {
+            return String.valueOf((long) value);
         }
+        return String.format(Locale.US, "%.1f", value);
     }
 
     private void requestNotificationPermissionIfNeeded() {
