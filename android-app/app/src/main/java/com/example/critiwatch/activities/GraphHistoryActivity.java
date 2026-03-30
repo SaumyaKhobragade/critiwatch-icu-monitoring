@@ -183,7 +183,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
             return;
         }
 
-        bottomNavigation.setSelectedItemId(R.id.nav_history);
+        bottomNavigation.setSelectedItemId(R.id.nav_dashboard);
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_dashboard) {
@@ -191,8 +191,6 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_alerts) {
                 startActivity(new Intent(this, AlertsActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_history) {
                 return true;
             } else if (itemId == R.id.nav_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));

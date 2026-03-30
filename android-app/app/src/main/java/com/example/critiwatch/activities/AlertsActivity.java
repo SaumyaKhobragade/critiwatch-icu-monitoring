@@ -209,9 +209,6 @@ public class AlertsActivity extends AppCompatActivity {
                 return true;
             } else if (itemId == R.id.nav_alerts) {
                 return true;
-            } else if (itemId == R.id.nav_history) {
-                startActivity(new Intent(this, GraphHistoryActivity.class));
-                return true;
             } else if (itemId == R.id.nav_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;

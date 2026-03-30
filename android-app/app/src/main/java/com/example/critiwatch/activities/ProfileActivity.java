@@ -75,9 +75,6 @@ public class ProfileActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_alerts) {
                 startActivity(new Intent(this, AlertsActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_history) {
-                startActivity(new Intent(this, GraphHistoryActivity.class));
-                return true;
             } else if (itemId == R.id.nav_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;

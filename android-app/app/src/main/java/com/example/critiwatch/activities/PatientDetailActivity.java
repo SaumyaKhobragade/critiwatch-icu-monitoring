@@ -428,11 +428,6 @@ public class PatientDetailActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_alerts) {
                 startActivity(new Intent(this, AlertsActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_history) {
-                Intent intent = new Intent(this, GraphHistoryActivity.class);
-                intent.putExtra(Constants.EXTRA_PATIENT_ID, patientId);
-                startActivity(intent);
-                return true;
             } else if (itemId == R.id.nav_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;

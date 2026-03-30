@@ -68,9 +68,6 @@ public class SettingsActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_alerts) {
                 startActivity(new Intent(this, AlertsActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_history) {
-                startActivity(new Intent(this, GraphHistoryActivity.class));
-                return true;
             } else if (itemId == R.id.nav_settings) {
                 return true;
             }
