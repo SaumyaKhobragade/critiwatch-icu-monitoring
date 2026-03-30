@@ -10,8 +10,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.R;
 import com.example.critiwatch.models.VitalSign;
+import com.example.critiwatch.utils.DateTimeUtils;
 
 import java.util.List;
+import java.util.Locale;
 
 public class VitalHistoryAdapter extends RecyclerView.Adapter<VitalHistoryAdapter.VitalHistoryViewHolder> {
 
@@ -31,12 +33,13 @@ public class VitalHistoryAdapter extends RecyclerView.Adapter<VitalHistoryAdapte
     @Override
     public void onBindViewHolder(@NonNull VitalHistoryViewHolder holder, int position) {
         VitalSign vitalSign = vitalSigns.get(position);
-        holder.tvReadingTime.setText(vitalSign.getTimestamp());
+        String recordedAt = vitalSign.getTimestamp();
+        holder.tvReadingTime.setText(DateTimeUtils.toRelativeTime(recordedAt));
         holder.tvHistoryHr.setText(String.valueOf(vitalSign.getHeartRate()));
         holder.tvHistorySpO2.setText(vitalSign.getSpo2() + "%");
         holder.tvHistoryBp.setText(vitalSign.getBloodPressure());
         holder.tvHistoryRr.setText(String.valueOf(vitalSign.getRespiratoryRate()));
-        holder.tvHistoryTemp.setText(vitalSign.getTemperatureText() + "C");
+        holder.tvHistoryTemp.setText(String.format(Locale.US, "%s C", vitalSign.getTemperatureText()));
     }
 
     @Override

@@ -188,8 +188,8 @@
                 android:orientation="vertical"
                 android:padding="@dimen/spacing_lg">
 
-                <!-- Heart Rate Chart Card -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardHeartRateChart"
                     style="@style/Widget.CritiWatch.CardView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -205,17 +205,17 @@
                             android:layout_height="wrap_content"
                             android:text="Heart Rate (BPM)"
                             android:textSize="@dimen/text_caption" />
-                        <FrameLayout
-                            android:id="@+id/chartContainerHR"
+                        <com.github.mikephil.charting.charts.LineChart
+                            android:id="@+id/chartHeartRate"
                             android:layout_width="match_parent"
-                            android:layout_height="160dp"
+                            android:layout_height="180dp"
                             android:layout_marginTop="@dimen/spacing_sm"
-                            android:background="@drawable/bg_section_soft" />
+                            android:background="@color/surface_secondary" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- SpO2 Chart Card -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardSpo2Chart"
                     style="@style/Widget.CritiWatch.CardView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -231,16 +231,67 @@
                             android:layout_height="wrap_content"
                             android:text="SpO2 (%)"
                             android:textSize="@dimen/text_caption" />
-                        <FrameLayout
-                            android:id="@+id/chartContainerSpO2"
+                        <com.github.mikephil.charting.charts.LineChart
+                            android:id="@+id/chartSpo2"
                             android:layout_width="match_parent"
-                            android:layout_height="160dp"
+                            android:layout_height="180dp"
                             android:layout_marginTop="@dimen/spacing_sm"
-                            android:background="@drawable/bg_section_soft" />
+                            android:background="@color/surface_secondary" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Recent Readings Section -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardBloodPressureChart"
+                    style="@style/Widget.CritiWatch.CardView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_lg">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_md">
+                        <TextView
+                            style="@style/TextAppearance.CritiWatch.Header"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Blood Pressure (mmHg)"
+                            android:textSize="@dimen/text_caption" />
+                        <com.github.mikephil.charting.charts.LineChart
+                            android:id="@+id/chartBloodPressure"
+                            android:layout_width="match_parent"
+                            android:layout_height="180dp"
+                            android:layout_marginTop="@dimen/spacing_sm"
+                            android:background="@color/surface_secondary" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardTemperatureChart"
+                    style="@style/Widget.CritiWatch.CardView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing_lg">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_md">
+                        <TextView
+                            style="@style/TextAppearance.CritiWatch.Header"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Temperature (C)"
+                            android:textSize="@dimen/text_caption" />
+                        <com.github.mikephil.charting.charts.LineChart
+                            android:id="@+id/chartTemperature"
+                            android:layout_width="match_parent"
+                            android:layout_height="180dp"
+                            android:layout_marginTop="@dimen/spacing_sm"
+                            android:background="@color/surface_secondary" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
                 <androidx.cardview.widget.CardView
                     style="@style/Widget.CritiWatch.CardView"
                     android:layout_width="match_parent"
@@ -257,8 +308,19 @@
                             android:text="Recent Readings"
                             android:textSize="@dimen/text_caption" />
 
+                        <TextView
+                            android:id="@+id/tvEmptyHistory"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_sm"
+                            android:gravity="center"
+                            android:text="No vital history available for this patient."
+                            android:textColor="@color/text_muted"
+                            android:textSize="@dimen/text_body"
+                            android:visibility="gone" />
+
                         <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvRecentReadings"
+                            android:id="@+id/rvVitalHistory"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/spacing_sm"
