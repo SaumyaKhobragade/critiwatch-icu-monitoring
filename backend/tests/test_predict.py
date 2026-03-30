@@ -40,3 +40,7 @@ def test_predict_endpoint_validation_rejects_invalid_spo2() -> None:
     }
     response = client.post("/predict", json=payload)
     assert response.status_code == 422
+
+    body = response.json()
+    assert body["error"]["code"] == "validation_error"
+    assert isinstance(body["error"]["details"], list)

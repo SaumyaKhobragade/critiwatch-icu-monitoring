@@ -5,14 +5,14 @@ from pydantic import BaseModel, Field, model_validator
 
 class PredictRequest(BaseModel):
     patient_id: Optional[str] = Field(default=None, description="Optional patient identifier")
-    heart_rate: int = Field(..., ge=20, le=250, description="Heart rate in beats per minute")
-    spo2: int = Field(..., ge=0, le=100, description="Oxygen saturation percentage")
-    systolic_bp: int = Field(..., ge=40, le=260, description="Systolic blood pressure in mmHg")
-    diastolic_bp: int = Field(..., ge=20, le=180, description="Diastolic blood pressure in mmHg")
-    respiratory_rate: int = Field(..., ge=5, le=80, description="Respiratory rate per minute")
+    heart_rate: int = Field(..., ge=25, le=240, description="Heart rate in beats per minute")
+    spo2: int = Field(..., ge=50, le=100, description="Oxygen saturation percentage")
+    systolic_bp: int = Field(..., ge=60, le=260, description="Systolic blood pressure in mmHg")
+    diastolic_bp: int = Field(..., ge=30, le=160, description="Diastolic blood pressure in mmHg")
+    respiratory_rate: int = Field(..., ge=6, le=70, description="Respiratory rate per minute")
     temperature: float = Field(
         ...,
-        ge=25.0,
+        ge=30.0,
         le=110.0,
         description="Body temperature (Celsius or Fahrenheit)",
     )

@@ -8,7 +8,6 @@ def get_model_info() -> dict:
     return {
         "engine_type": "rule-based",
         "model_version": "v1",
-        "planned_ml_model": "logistic_regression",
         "features_used": [
             "heart_rate",
             "spo2",
@@ -17,4 +16,7 @@ def get_model_info() -> dict:
             "respiratory_rate",
             "temperature",
         ],
+        "current_mode": "local_rule_engine",
+        "planned_ml_model": "logistic_regression",
+        "notes": "Prediction currently uses deterministic ICU-friendly threshold rules.",
     }

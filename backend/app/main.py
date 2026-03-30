@@ -7,16 +7,21 @@ from app.api.routes_vitals import router as vitals_router
 from app.routes.health import router as health_router
 from app.routes.model_info import router as model_info_router
 from app.routes.predict import router as predict_router
+from app.routes.simulate import router as simulate_router
+from app.utils import register_exception_handlers
 
 app = FastAPI(
     title="CritiWatch Backend",
-    version="0.2.0",
+    version="0.3.0",
     description="Rule-based ICU deterioration prediction API scaffold.",
 )
+
+register_exception_handlers(app)
 
 app.include_router(health_router)
 app.include_router(model_info_router)
 app.include_router(predict_router)
+app.include_router(simulate_router)
 
 # Existing non-ML demo routes retained for compatibility with current app flows.
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
