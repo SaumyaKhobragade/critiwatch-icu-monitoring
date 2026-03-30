@@ -12,6 +12,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.models.UserProfile;
+import com.example.critiwatch.repository.UserProfileRepository;
 import com.example.critiwatch.services.SessionManager;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -19,17 +21,22 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class SettingsActivity extends AppCompatActivity {
 
     private SessionManager sessionManager;
+    private UserProfileRepository userProfileRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_settings);
+
         sessionManager = new SessionManager(this);
         if (!sessionManager.isLoggedIn()) {
             openLoginAndClearTask();
             return;
         }
+
+        userProfileRepository = new UserProfileRepository(this);
+        userProfileRepository.createDefaultProfileIfMissing();
 
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -37,7 +44,7 @@ public class SettingsActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        bindSessionData();
+        bindProfileData();
 
         TextView btnViewProfileLink = findViewById(R.id.btnViewProfileLink);
         if (btnViewProfileLink != null) {
@@ -50,6 +57,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindProfileData();
     }
 
     private void setupBottomNavigation() {
@@ -88,29 +101,28 @@ public class SettingsActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void bindSessionData() {
-        String userName = sessionManager.getUserName();
-        String userEmail = sessionManager.getUserEmail();
-        String userRole = sessionManager.getUserRole();
+    private void bindProfileData() {
+        UserProfile profile = userProfileRepository.getOrCreateProfile();
+        if (profile == null) {
+            return;
+        }
+
+        String userName = safe(profile.getName(), "Demo Doctor");
+        String userEmail = safe(profile.getEmail(), "doctor@critiwatch.local");
+        String userRole = safe(profile.getDesignation(), "ICU Resident");
 
         TextView tvSettingsProfileName = findViewById(R.id.tvSettingsProfileName);
-        if (tvSettingsProfileName != null && !userName.isEmpty()) {
+        if (tvSettingsProfileName != null) {
             tvSettingsProfileName.setText(userName);
         }
 
         TextView tvSettingsProfileMeta = findViewById(R.id.tvSettingsProfileMeta);
         if (tvSettingsProfileMeta != null) {
-            if (!userRole.isEmpty() && !userEmail.isEmpty()) {
-                tvSettingsProfileMeta.setText(userRole + " • " + userEmail);
-            } else if (!userRole.isEmpty()) {
-                tvSettingsProfileMeta.setText(userRole);
-            } else if (!userEmail.isEmpty()) {
-                tvSettingsProfileMeta.setText(userEmail);
-            }
+            tvSettingsProfileMeta.setText(userRole + " • " + userEmail);
         }
 
         TextView tvAvatarSmall = findViewById(R.id.tvAvatarSmall);
-        if (tvAvatarSmall != null && !userName.isEmpty()) {
+        if (tvAvatarSmall != null) {
             tvAvatarSmall.setText(buildInitials(userName));
         }
     }
@@ -128,6 +140,10 @@ public class SettingsActivity extends AppCompatActivity {
         }
         String last = parts[parts.length - 1].substring(0, 1).toUpperCase();
         return first + last;
+    }
+
+    private String safe(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value.trim();
     }
 
     private void logoutUser() {

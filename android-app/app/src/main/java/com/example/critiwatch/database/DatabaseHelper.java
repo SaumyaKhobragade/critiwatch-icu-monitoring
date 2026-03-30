@@ -7,13 +7,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "critiwatch_local.db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
 
     public static final String TABLE_PATIENTS = "patients";
     public static final String TABLE_VITAL_SIGNS = "vital_signs";
     public static final String TABLE_PREDICTIONS = "predictions";
     public static final String TABLE_ALERTS = "alerts";
     public static final String TABLE_PATIENT_NOTES = "patient_notes";
+    public static final String TABLE_USER_PROFILE = "user_profile";
 
     public static final String COL_ID = "id";
 
@@ -55,6 +56,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_NOTE_PATIENT_ID = "patient_id";
     public static final String COL_NOTE_TEXT = "note_text";
     public static final String COL_NOTE_CREATED_AT = "created_at";
+    public static final String COL_NOTE_UPDATED_AT = "updated_at";
+
+    public static final String COL_PROFILE_NAME = "name";
+    public static final String COL_PROFILE_EMAIL = "email";
+    public static final String COL_PROFILE_DESIGNATION = "designation";
+    public static final String COL_PROFILE_UPDATED_AT = "updated_at";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -123,7 +130,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COL_NOTE_PATIENT_ID + " INTEGER NOT NULL, "
                 + COL_NOTE_TEXT + " TEXT NOT NULL, "
                 + COL_NOTE_CREATED_AT + " TEXT, "
+                + COL_NOTE_UPDATED_AT + " TEXT, "
                 + "FOREIGN KEY(" + COL_NOTE_PATIENT_ID + ") REFERENCES " + TABLE_PATIENTS + "(" + COL_ID + ") ON DELETE CASCADE"
+                + ");";
+
+        String createUserProfileTable = "CREATE TABLE " + TABLE_USER_PROFILE + " ("
+                + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COL_PROFILE_NAME + " TEXT, "
+                + COL_PROFILE_EMAIL + " TEXT, "
+                + COL_PROFILE_DESIGNATION + " TEXT, "
+                + COL_PROFILE_UPDATED_AT + " TEXT"
                 + ");";
 
         db.execSQL(createPatientsTable);
@@ -131,15 +147,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(createPredictionsTable);
         db.execSQL(createAlertsTable);
         db.execSQL(createPatientNotesTable);
+        db.execSQL(createUserProfileTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PATIENT_NOTES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ALERTS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PREDICTIONS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_VITAL_SIGNS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PATIENTS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            String createPatientNotesTable = "CREATE TABLE IF NOT EXISTS " + TABLE_PATIENT_NOTES + " ("
+                    + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COL_NOTE_PATIENT_ID + " INTEGER NOT NULL, "
+                    + COL_NOTE_TEXT + " TEXT NOT NULL, "
+                    + COL_NOTE_CREATED_AT + " TEXT, "
+                    + COL_NOTE_UPDATED_AT + " TEXT, "
+                    + "FOREIGN KEY(" + COL_NOTE_PATIENT_ID + ") REFERENCES " + TABLE_PATIENTS + "(" + COL_ID + ") ON DELETE CASCADE"
+                    + ");";
+            db.execSQL(createPatientNotesTable);
+        }
+
+        if (oldVersion < 3) {
+            execSqlIgnoringError(db,
+                    "ALTER TABLE " + TABLE_PATIENT_NOTES
+                            + " ADD COLUMN " + COL_NOTE_UPDATED_AT + " TEXT");
+            String createUserProfileTable = "CREATE TABLE IF NOT EXISTS " + TABLE_USER_PROFILE + " ("
+                    + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COL_PROFILE_NAME + " TEXT, "
+                    + COL_PROFILE_EMAIL + " TEXT, "
+                    + COL_PROFILE_DESIGNATION + " TEXT, "
+                    + COL_PROFILE_UPDATED_AT + " TEXT"
+                    + ");";
+            db.execSQL(createUserProfileTable);
+        }
+    }
+
+    private void execSqlIgnoringError(SQLiteDatabase db, String sql) {
+        try {
+            db.execSQL(sql);
+        } catch (Exception ignored) {
+            // Column may already exist on upgraded installs.
+        }
     }
 }

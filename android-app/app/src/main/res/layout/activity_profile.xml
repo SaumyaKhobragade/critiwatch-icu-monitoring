@@ -45,7 +45,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:id="@+id/ivEditProfile"
+                android:id="@+id/btnEditProfile"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:contentDescription="Edit Profile"
@@ -90,7 +90,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvProfileName"
+                    android:id="@+id/tvUserName"
                     style="@style/TextAppearance.CritiWatch.Header"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
                     android:textSize="22sp" />
 
                 <TextView
-                    android:id="@+id/tvProfileRole"
+                    android:id="@+id/tvUserRole"
                     style="@style/TextAppearance.CritiWatch.Secondary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -227,6 +227,7 @@
                                 android:textSize="14sp" />
 
                             <TextView
+                                android:id="@+id/tvProfileFullNameValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="David A. Rivera"
@@ -255,7 +256,7 @@
                                 android:textSize="14sp" />
 
                             <TextView
-                                android:id="@+id/tvProfileEmail"
+                                android:id="@+id/tvUserEmail"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="d.rivera@hospital.org"
@@ -312,6 +313,7 @@
                                 android:textSize="14sp" />
 
                             <TextView
+                                android:id="@+id/tvProfileDesignationValue"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Critical Care Medicine"

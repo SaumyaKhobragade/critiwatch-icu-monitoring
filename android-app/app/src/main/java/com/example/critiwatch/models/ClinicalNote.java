@@ -1,25 +1,29 @@
 package com.example.critiwatch.models;
 
-public class PatientNote {
+public class ClinicalNote {
+
     private String id;
     private String patientId;
     private String noteText;
     private String createdAt;
+    private String updatedAt;
 
-    public PatientNote() {
+    public ClinicalNote() {
     }
 
-    public PatientNote(String id, String patientId, String noteText, String createdAt) {
+    public ClinicalNote(String id, String patientId, String noteText, String createdAt, String updatedAt) {
         this.id = id;
         this.patientId = patientId;
         this.noteText = noteText;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public PatientNote(String patientId, String noteText, String createdAt) {
+    public ClinicalNote(String patientId, String noteText, String createdAt, String updatedAt) {
         this.patientId = patientId;
         this.noteText = noteText;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public String getId() {
@@ -52,5 +56,13 @@ public class PatientNote {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

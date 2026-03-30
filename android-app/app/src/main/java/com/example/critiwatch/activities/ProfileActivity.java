@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.TypedValue;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +19,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.models.UserProfile;
+import com.example.critiwatch.repository.UserProfileRepository;
 import com.example.critiwatch.services.SessionManager;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -25,17 +28,23 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class ProfileActivity extends AppCompatActivity {
 
     private SessionManager sessionManager;
+    private UserProfileRepository userProfileRepository;
+    private UserProfile currentProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_profile);
+
         sessionManager = new SessionManager(this);
         if (!sessionManager.isLoggedIn()) {
             openLoginAndClearTask();
             return;
         }
+
+        userProfileRepository = new UserProfileRepository(this);
+        userProfileRepository.createDefaultProfileIfMissing();
 
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -43,21 +52,34 @@ public class ProfileActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        bindSessionData();
+
+        bindProfileData();
 
         ImageView ivBack = findViewById(R.id.ivBack);
         if (ivBack != null) {
             ivBack.setOnClickListener(v -> navigateToDashboard());
-        } else {
-            Toast.makeText(this, "Missing view id: ivBack", Toast.LENGTH_LONG).show();
         }
 
-        ImageView ivEditProfile = findViewById(R.id.ivEditProfile);
-        if (ivEditProfile != null) {
-            ivEditProfile.setOnClickListener(v -> showEditProfileDialog());
+        View editTrigger = findViewById(R.id.btnEditProfile);
+        if (editTrigger == null) {
+            int legacyEditId = getResources().getIdentifier("ivEditProfile", "id", getPackageName());
+            if (legacyEditId != 0) {
+                editTrigger = findViewById(legacyEditId);
+            }
+        }
+        if (editTrigger != null) {
+            editTrigger.setOnClickListener(v -> showEditProfileDialog());
+        } else {
+            Toast.makeText(this, "Missing view id: btnEditProfile or ivEditProfile", Toast.LENGTH_LONG).show();
         }
 
         setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindProfileData();
     }
 
     private void setupBottomNavigation() {
@@ -90,39 +112,33 @@ public class ProfileActivity extends AppCompatActivity {
         finish();
     }
 
-    private void bindSessionData() {
-        String userName = sessionManager.getUserName();
-        String userEmail = sessionManager.getUserEmail();
-        String userRole = sessionManager.getUserRole();
-
-        TextView tvProfileName = findViewById(R.id.tvProfileName);
-        if (tvProfileName != null && !userName.isEmpty()) {
-            tvProfileName.setText(userName);
+    private void bindProfileData() {
+        currentProfile = userProfileRepository.getOrCreateProfile();
+        if (currentProfile == null) {
+            return;
         }
 
-        TextView tvProfileRole = findViewById(R.id.tvProfileRole);
-        if (tvProfileRole != null) {
-            if (!userRole.isEmpty() && !userEmail.isEmpty()) {
-                tvProfileRole.setText(userRole + " • " + userEmail);
-            } else if (!userRole.isEmpty()) {
-                tvProfileRole.setText(userRole);
-            } else if (!userEmail.isEmpty()) {
-                tvProfileRole.setText(userEmail);
-            }
-        }
+        String name = safe(currentProfile.getName(), "Demo Doctor");
+        String email = safe(currentProfile.getEmail(), "doctor@critiwatch.local");
+        String designation = safe(currentProfile.getDesignation(), "ICU Resident");
 
-        TextView tvProfileEmail = findViewById(R.id.tvProfileEmail);
-        if (tvProfileEmail != null && !userEmail.isEmpty()) {
-            tvProfileEmail.setText(userEmail);
-        }
-
-        TextView tvAvatarPlaceholder = findViewById(R.id.tvAvatarPlaceholder);
-        if (tvAvatarPlaceholder != null && !userName.isEmpty()) {
-            tvAvatarPlaceholder.setText(buildInitials(userName));
-        }
+        setFirstExistingText(name, "tvProfileName", "tvUserName");
+        setFirstExistingText(designation + " • " + email, "tvProfileRole", "tvUserRole");
+        setFirstExistingText(email, "tvProfileEmail", "tvUserEmail");
+        setFirstExistingText(name, "tvProfileFullNameValue");
+        setFirstExistingText(designation, "tvProfileDesignationValue");
+        setFirstExistingText(buildInitials(name), "tvAvatarPlaceholder");
     }
 
     private void showEditProfileDialog() {
+        if (currentProfile == null) {
+            currentProfile = userProfileRepository.getOrCreateProfile();
+        }
+        if (currentProfile == null) {
+            Toast.makeText(this, "Unable to load profile", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         int sidePadding = dpToPx(20);
         int spacing = dpToPx(12);
 
@@ -136,13 +152,13 @@ public class ProfileActivity extends AppCompatActivity {
 
         EditText etName = new EditText(this);
         etName.setHint("Full name");
-        etName.setText(sessionManager.getUserName());
+        etName.setText(currentProfile.getName());
         etName.setSingleLine(true);
         container.addView(etName);
 
         EditText etEmail = new EditText(this);
         etEmail.setHint("Email");
-        etEmail.setText(sessionManager.getUserEmail());
+        etEmail.setText(currentProfile.getEmail());
         etEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         etEmail.setSingleLine(true);
         LinearLayout.LayoutParams emailParams = new LinearLayout.LayoutParams(
@@ -152,16 +168,16 @@ public class ProfileActivity extends AppCompatActivity {
         emailParams.topMargin = spacing;
         container.addView(etEmail, emailParams);
 
-        EditText etRole = new EditText(this);
-        etRole.setHint("Role");
-        etRole.setText(sessionManager.getUserRole());
-        etRole.setSingleLine(true);
+        EditText etDesignation = new EditText(this);
+        etDesignation.setHint("Designation");
+        etDesignation.setText(currentProfile.getDesignation());
+        etDesignation.setSingleLine(true);
         LinearLayout.LayoutParams roleParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         roleParams.topMargin = spacing;
-        container.addView(etRole, roleParams);
+        container.addView(etDesignation, roleParams);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Edit Profile")
@@ -173,7 +189,7 @@ public class ProfileActivity extends AppCompatActivity {
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String name = etName.getText() == null ? "" : etName.getText().toString().trim();
             String email = etEmail.getText() == null ? "" : etEmail.getText().toString().trim();
-            String role = etRole.getText() == null ? "" : etRole.getText().toString().trim();
+            String designation = etDesignation.getText() == null ? "" : etDesignation.getText().toString().trim();
 
             if (name.isEmpty()) {
                 etName.setError("Name is required");
@@ -183,18 +199,48 @@ public class ProfileActivity extends AppCompatActivity {
                 etEmail.setError("Email is required");
                 return;
             }
-            if (role.isEmpty()) {
-                etRole.setError("Role is required");
+            if (!email.contains("@")) {
+                etEmail.setError("Enter a valid email");
+                return;
+            }
+            if (designation.isEmpty()) {
+                etDesignation.setError("Designation is required");
                 return;
             }
 
-            sessionManager.createLoginSession(name, email, role);
-            bindSessionData();
+            UserProfile updated = new UserProfile(
+                    currentProfile.getId(),
+                    name,
+                    email,
+                    designation,
+                    currentProfile.getUpdatedAt()
+            );
+            boolean saved = userProfileRepository.saveProfile(updated);
+            if (!saved) {
+                Toast.makeText(this, "Unable to save profile", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            bindProfileData();
             Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         }));
 
         dialog.show();
+    }
+
+    private void setFirstExistingText(String value, String... idNames) {
+        for (String idName : idNames) {
+            int viewId = getResources().getIdentifier(idName, "id", getPackageName());
+            if (viewId == 0) {
+                continue;
+            }
+            View view = findViewById(viewId);
+            if (view instanceof TextView) {
+                ((TextView) view).setText(value);
+                return;
+            }
+        }
     }
 
     private String buildInitials(String fullName) {
@@ -204,13 +250,16 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         String[] parts = trimmed.split("\\s+");
-
         String first = parts[0].substring(0, 1).toUpperCase();
         if (parts.length == 1) {
             return first;
         }
         String last = parts[parts.length - 1].substring(0, 1).toUpperCase();
         return first + last;
+    }
+
+    private String safe(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value.trim();
     }
 
     private void openLoginAndClearTask() {

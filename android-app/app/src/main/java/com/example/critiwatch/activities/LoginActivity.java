@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.repository.UserProfileRepository;
 import com.example.critiwatch.services.SessionManager;
 import com.example.critiwatch.utils.SystemUiUtils;
 
@@ -25,6 +26,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String DEMO_EMAIL = "demo@critiwatch.local";
     private static final String DEMO_ROLE = "ICU Clinician";
     private SessionManager sessionManager;
+    private UserProfileRepository userProfileRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +34,8 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
         sessionManager = new SessionManager(this);
+        userProfileRepository = new UserProfileRepository(this);
+        userProfileRepository.createDefaultProfileIfMissing();
 
         if (sessionManager.isLoggedIn()) {
             openDashboard();

@@ -25,8 +25,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
+import com.example.critiwatch.models.ClinicalNote;
 import com.example.critiwatch.models.Patient;
-import com.example.critiwatch.models.PatientNote;
 import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
@@ -68,7 +68,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private VitalSign latestVital;
     private Prediction latestPrediction;
     private AlertItem latestAlert;
-    private PatientNote latestNote;
+    private ClinicalNote latestNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -395,12 +395,15 @@ public class PatientDetailActivity extends AppCompatActivity {
 
         tvClinicalNote.setText(latestNote.getNoteText().trim());
         if (tvClinicalNoteTimestamp != null) {
-            String createdAt = latestNote.getCreatedAt();
-            if (createdAt == null || createdAt.trim().isEmpty()) {
+            String displayTimestamp = latestNote.getUpdatedAt();
+            if (displayTimestamp == null || displayTimestamp.trim().isEmpty()) {
+                displayTimestamp = latestNote.getCreatedAt();
+            }
+            if (displayTimestamp == null || displayTimestamp.trim().isEmpty()) {
                 tvClinicalNoteTimestamp.setText("");
                 tvClinicalNoteTimestamp.setVisibility(View.GONE);
             } else {
-                tvClinicalNoteTimestamp.setText("Latest update: " + DateTimeUtils.toRelativeTime(createdAt));
+                tvClinicalNoteTimestamp.setText("Latest update: " + DateTimeUtils.toRelativeTime(displayTimestamp));
                 tvClinicalNoteTimestamp.setVisibility(View.VISIBLE);
             }
         }
@@ -436,13 +439,13 @@ public class PatientDetailActivity extends AppCompatActivity {
             return;
         }
 
-        PatientNote note = new PatientNote(patientId, trimmed, DateTimeUtils.now());
-        long noteId = noteRepository.addNote(note);
-        if (noteId <= 0) {
+        ClinicalNote savedNote = noteRepository.saveOrUpdateLatestNote(id, trimmed);
+        if (savedNote == null) {
             Toast.makeText(this, "Unable to save clinical note", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        latestNote = savedNote;
         bindLatestClinicalNote();
         Toast.makeText(this, "Clinical note saved", Toast.LENGTH_SHORT).show();
     }
