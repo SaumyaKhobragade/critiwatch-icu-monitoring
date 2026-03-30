@@ -103,3 +103,8 @@ local.properties
 *.db
 *.sqlite
 *.sqlite3
+
+# ML training artifacts
+backend/ml/artifacts/*
+!backend/ml/artifacts/.gitkeep
+
