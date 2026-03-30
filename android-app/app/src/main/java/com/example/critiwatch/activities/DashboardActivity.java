@@ -226,10 +226,20 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private int extractWardNumber(String ward, String bedNumber) {
-        String source = ward;
-        if (source == null || source.trim().isEmpty()) {
-            source = bedNumber;
+        int wardNumber = extractLeadingWardDigits(ward);
+        if (wardNumber > 0) {
+            return wardNumber;
         }
+
+        int bedWardNumber = extractLeadingWardDigits(bedNumber);
+        if (bedWardNumber > 0) {
+            return bedWardNumber;
+        }
+
+        return -1;
+    }
+
+    private int extractLeadingWardDigits(String source) {
         if (source == null) {
             return -1;
         }
