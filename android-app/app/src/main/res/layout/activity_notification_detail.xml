@@ -12,14 +12,13 @@
     <LinearLayout
         android:id="@+id/llAlertHeader"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:background="@color/soft_red"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="@dimen/spacing_xxl"
         app:layout_constraintBottom_toTopOf="@+id/cvNotificationContent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_weight="1">
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/ivBack"
@@ -76,11 +75,11 @@
         android:id="@+id/cvNotificationContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="@dimen/spacing_sm"
         app:cardCornerRadius="24dp"
         app:cardElevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/llAlertHeader"
-        app:layout_constraintVertical_weight="2">
+        app:layout_constraintTop_toBottomOf="@id/llAlertHeader">
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
