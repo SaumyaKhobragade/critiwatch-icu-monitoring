@@ -1,7 +1,9 @@
 package com.example.critiwatch;
 
 import android.app.AlertDialog;
+import android.content.pm.PackageManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.PopupMenu;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -26,14 +29,18 @@ import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
+import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
+import com.example.critiwatch.utils.RiskUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
+
+    private static final int REQ_POST_NOTIFICATIONS = 2101;
 
     private AlertRepository alertRepository;
     private PatientRepository patientRepository;
@@ -52,6 +59,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private int respiratoryRate;
     private double temperature;
     private String patientCreatedAt;
+    private VitalSign latestVital;
     private Prediction latestPrediction;
     private AlertItem latestAlert;
 
@@ -65,6 +73,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
         vitalDao = new VitalDao(this);
+        NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -123,7 +132,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         respiratoryRate = patient.getRespiratoryRate();
         temperature = patient.getTemperature();
 
-        VitalSign latestVital = vitalDao.getLatestVitalByPatientId(id);
+        latestVital = vitalDao.getLatestVitalByPatientId(id);
         if (latestVital != null) {
             heartRate = latestVital.getHeartRate();
             spo2 = latestVital.getSpo2();
@@ -169,6 +178,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         TextView tvPatientIdChip = findViewById(R.id.tvPatientIdChip);
         TextView tvAdmittedChip = findViewById(R.id.tvAdmittedChip);
         TextView tvAlertBannerMessage = findViewById(R.id.tvAlertBannerMessage);
+        TextView tvPredictionSummary = findViewById(R.id.tvPredictionSummary);
 
         if (tvPatientNameLarge != null) {
             tvPatientNameLarge.setText(patientName);
@@ -222,6 +232,18 @@ public class PatientDetailActivity extends AppCompatActivity {
             } else {
                 tvAlertBannerMessage.setText("STABLE: Current trend is stable. Continue standard ICU monitoring protocol.");
                 tvAlertBannerMessage.setTextColor(ContextCompat.getColor(this, R.color.status_stable));
+            }
+        }
+
+        if (tvPredictionSummary != null) {
+            if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
+                tvPredictionSummary.setText(
+                        String.format(Locale.US, "%.0f%% risk score • %s",
+                                latestPrediction.getRiskScore(),
+                                latestPrediction.getSummary())
+                );
+            } else {
+                tvPredictionSummary.setText("Run prediction to generate risk insight from latest vitals.");
             }
         }
     }
@@ -318,6 +340,11 @@ public class PatientDetailActivity extends AppCompatActivity {
             });
         }
 
+        Button btnRunPrediction = findViewById(R.id.btnRunPrediction);
+        if (btnRunPrediction != null) {
+            btnRunPrediction.setOnClickListener(v -> runPredictionForCurrentPatient());
+        }
+
         Button btnActivateResponse = findViewById(R.id.btnActivateResponse);
         if (btnActivateResponse != null) {
             btnActivateResponse.setOnClickListener(v -> openAlertDetail());
@@ -339,6 +366,134 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (llAlertBanner != null) {
             llAlertBanner.setOnClickListener(v -> openAlertDetail());
         }
+    }
+
+    private void runPredictionForCurrentPatient() {
+        int id = parseId(patientId);
+        if (id <= 0) {
+            Toast.makeText(this, "Invalid patient id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        latestVital = vitalDao.getLatestVitalByPatientId(id);
+        if (latestVital == null) {
+            Toast.makeText(this, "No vitals found. Add vitals before running prediction.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        RiskUtils.EvaluationResult evaluation = RiskUtils.evaluate(latestVital);
+        patientRisk = evaluation.getRiskLevel();
+
+        Prediction prediction = new Prediction(
+                null,
+                patientId,
+                evaluation.getRiskLevel(),
+                evaluation.getRiskScore(),
+                evaluation.getSummary(),
+                DateTimeUtils.now()
+        );
+        long predictionId = predictionRepository.addPrediction(prediction);
+        if (predictionId <= 0) {
+            Toast.makeText(this, "Prediction save failed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        prediction.setId(String.valueOf(predictionId));
+        latestPrediction = prediction;
+        patientRepository.updatePatientRiskLevel(id, patientRisk);
+
+        heartRate = latestVital.getHeartRate();
+        spo2 = latestVital.getSpo2();
+        bloodPressure = latestVital.getBloodPressure();
+        respiratoryRate = latestVital.getRespiratoryRate();
+        temperature = latestVital.getTemperature();
+
+        boolean alertCreated = false;
+        boolean notificationSent = false;
+        if (!Constants.RISK_STABLE.equalsIgnoreCase(evaluation.getRiskLevel())) {
+            AlertItem alertItem = new AlertItem(
+                    null,
+                    patientId,
+                    evaluation.getAlertType(),
+                    evaluation.getRiskLevel(),
+                    evaluation.getSummary(),
+                    DateTimeUtils.now(),
+                    buildPrimaryAlertValue(evaluation, latestVital),
+                    buildPrimaryAlertUnit(evaluation),
+                    (int) Math.round(evaluation.getRiskScore()),
+                    false
+            );
+            alertItem.setPatientName(patientName);
+            alertItem.setPatientAge(patientAge);
+            alertItem.setPatientSex(patientSex);
+            alertItem.setPatientBed(patientBed);
+            alertItem.setPatientRisk(patientRisk);
+
+            long alertId = alertRepository.addAlert(alertItem);
+            if (alertId > 0) {
+                alertCreated = true;
+                latestAlert = alertRepository.getAlertById((int) alertId);
+                if (latestAlert == null) {
+                    alertItem.setId(String.valueOf(alertId));
+                    latestAlert = alertItem;
+                }
+                notificationSent = NotificationHelper.showAlertNotification(this, latestAlert);
+                if (!notificationSent && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestNotificationPermissionIfNeeded();
+                }
+            }
+        }
+
+        bindPatientHeader();
+        bindVitalCards();
+
+        String toastMessage = "Prediction updated: " + patientRisk;
+        if (alertCreated) {
+            toastMessage += notificationSent ? " (alert + notification sent)" : " (alert created)";
+        }
+        Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
+    }
+
+    private String buildPrimaryAlertValue(RiskUtils.EvaluationResult evaluation, VitalSign vitalSign) {
+        String alertType = evaluation.getAlertType().toLowerCase(Locale.US);
+        if (alertType.contains("spo2")) {
+            return String.valueOf(vitalSign.getSpo2());
+        }
+        if (alertType.contains("blood pressure")) {
+            return vitalSign.getBloodPressure();
+        }
+        if (alertType.contains("heart")) {
+            return String.valueOf(vitalSign.getHeartRate());
+        }
+        return String.format(Locale.US, "%.0f", evaluation.getRiskScore());
+    }
+
+    private String buildPrimaryAlertUnit(RiskUtils.EvaluationResult evaluation) {
+        String alertType = evaluation.getAlertType().toLowerCase(Locale.US);
+        if (alertType.contains("spo2")) {
+            return "%";
+        }
+        if (alertType.contains("blood pressure")) {
+            return "mmHg";
+        }
+        if (alertType.contains("heart")) {
+            return "BPM";
+        }
+        return "score";
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                REQ_POST_NOTIFICATIONS
+        );
     }
 
     private void acknowledgeLatestAlert() {
@@ -434,6 +589,19 @@ public class PatientDetailActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_POST_NOTIFICATIONS) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            Toast.makeText(
+                    this,
+                    granted ? "Notification permission granted" : "Notification permission denied",
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
     }
 
     private int parseId(String rawId) {

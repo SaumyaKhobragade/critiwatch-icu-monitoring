@@ -109,6 +109,22 @@ public class PatientDao {
         );
     }
 
+    public int updatePatientRiskLevel(int patientId, String riskLevel) {
+        if (patientId <= 0) {
+            return 0;
+        }
+
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseHelper.COL_PATIENT_RISK_LEVEL, riskLevel);
+        return db.update(
+                DatabaseHelper.TABLE_PATIENTS,
+                values,
+                DatabaseHelper.COL_ID + "=?",
+                new String[]{String.valueOf(patientId)}
+        );
+    }
+
     public int deletePatient(int id) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
         return db.delete(

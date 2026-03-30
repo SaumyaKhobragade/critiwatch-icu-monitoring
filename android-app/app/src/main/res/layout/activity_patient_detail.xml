@@ -209,6 +209,7 @@
                         android:letterSpacing="0.1" />
 
                     <TextView
+                        android:id="@+id/tvPredictionSummary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -366,6 +367,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingHorizontal="@dimen/spacing_lg">
+
+                <Button
+                    android:id="@+id/btnRunPrediction"
+                    style="@style/Widget.CritiWatch.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    android:text="Run Prediction" />
 
                 <Button
                     android:id="@+id/btnViewHistory"

@@ -70,6 +70,10 @@ public class PatientRepository {
         return patientDao.deletePatient(patientId) > 0;
     }
 
+    public boolean updatePatientRiskLevel(int patientId, String riskLevel) {
+        return patientDao.updatePatientRiskLevel(patientId, riskLevel) > 0;
+    }
+
     private Patient attachLatestData(Patient patient) {
         int id = parseId(patient.getId());
         if (id <= 0) {

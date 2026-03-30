@@ -1,5 +1,8 @@
 package com.example.critiwatch;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -11,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -21,6 +26,7 @@ import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.RiskUtils;
@@ -30,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AddPatientActivity extends AppCompatActivity {
+
+    private static final int REQ_POST_NOTIFICATIONS = 2102;
 
     private PatientRepository patientRepository;
     private AlertRepository alertRepository;
@@ -41,6 +49,7 @@ public class AddPatientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_patient);
         patientRepository = new PatientRepository(this);
         alertRepository = new AlertRepository(this);
+        NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -162,8 +171,16 @@ public class AddPatientActivity extends AppCompatActivity {
         double heightCm = parseDoubleValue(R.id.etHeight);
         double weightKg = parseDoubleValue(R.id.etWeight);
 
-        String riskLevel = RiskUtils.deriveRiskLevel(heartRate, spo2, systolicBp, respiratoryRate, temperature);
-        double riskScore = RiskUtils.deriveRiskScore(heartRate, spo2, systolicBp, respiratoryRate, temperature);
+        RiskUtils.EvaluationResult evaluationResult = RiskUtils.evaluate(
+                heartRate,
+                spo2,
+                systolicBp,
+                diastolicBp,
+                respiratoryRate,
+                temperature
+        );
+        String riskLevel = evaluationResult.getRiskLevel();
+        double riskScore = evaluationResult.getRiskScore();
 
         Patient patient = new Patient(
                 null,
@@ -195,7 +212,7 @@ public class AddPatientActivity extends AppCompatActivity {
                 null,
                 riskLevel,
                 riskScore,
-                "Initial deterioration estimate based on admission vitals.",
+                evaluationResult.getSummary(),
                 DateTimeUtils.now()
         );
 
@@ -205,23 +222,49 @@ public class AddPatientActivity extends AppCompatActivity {
             return;
         }
 
+        boolean alertCreated = false;
+        boolean notificationSent = false;
         if (!Constants.RISK_STABLE.equalsIgnoreCase(riskLevel)) {
             AlertItem alertItem = new AlertItem(
                     null,
                     String.valueOf(patientId),
-                    "Prediction Alert",
+                    evaluationResult.getAlertType(),
                     riskLevel,
-                    "Patient registered with elevated deterioration indicators.",
+                    evaluationResult.getSummary(),
                     DateTimeUtils.now(),
                     String.valueOf(heartRate),
                     "BPM",
                     (int) Math.round(riskScore),
                     false
             );
-            alertRepository.addAlert(alertItem);
+            alertItem.setPatientName(name);
+            alertItem.setPatientAge(age);
+            alertItem.setPatientSex(sex);
+            alertItem.setPatientBed(bedNumber);
+            alertItem.setPatientRisk(riskLevel);
+
+            long alertId = alertRepository.addAlert(alertItem);
+            if (alertId > 0) {
+                alertCreated = true;
+                alertItem.setId(String.valueOf(alertId));
+                notificationSent = NotificationHelper.showAlertNotification(this, alertItem);
+                if (!notificationSent) {
+                    requestNotificationPermissionIfNeeded();
+                }
+            }
         }
 
-        Toast.makeText(this, "Patient saved to local database", Toast.LENGTH_SHORT).show();
+        if (alertCreated) {
+            Toast.makeText(
+                    this,
+                    notificationSent
+                            ? "Patient saved. Risk alert created and notification sent."
+                            : "Patient saved. Risk alert created.",
+                    Toast.LENGTH_SHORT
+            ).show();
+        } else {
+            Toast.makeText(this, "Patient saved to local database", Toast.LENGTH_SHORT).show();
+        }
         finish();
     }
 
@@ -286,6 +329,34 @@ public class AddPatientActivity extends AppCompatActivity {
             return Double.parseDouble(value);
         } catch (Exception ignored) {
             return 0d;
+        }
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                REQ_POST_NOTIFICATIONS
+        );
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_POST_NOTIFICATIONS) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            Toast.makeText(
+                    this,
+                    granted ? "Notification permission granted" : "Notification permission denied",
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 }
