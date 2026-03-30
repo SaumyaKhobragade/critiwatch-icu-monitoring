@@ -21,7 +21,10 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.critiwatch.adapters.ClinicalNoteAdapter;
 import com.example.critiwatch.database.DatabaseSeeder;
 import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
@@ -40,6 +43,7 @@ import com.example.critiwatch.utils.RiskUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.List;
 import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
@@ -68,7 +72,9 @@ public class PatientDetailActivity extends AppCompatActivity {
     private VitalSign latestVital;
     private Prediction latestPrediction;
     private AlertItem latestAlert;
-    private ClinicalNote latestNote;
+    private RecyclerView rvClinicalNotes;
+    private TextView tvClinicalNotesEmpty;
+    private ClinicalNoteAdapter clinicalNoteAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,9 +101,10 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (!loadPatientDataFromDatabase()) {
             return;
         }
+        setupClinicalNotesList();
         bindPatientHeader();
         bindVitalCards();
-        bindLatestClinicalNote();
+        bindClinicalNotesHistory();
         setupClickActions();
         setupBottomNavigation();
     }
@@ -375,37 +382,32 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void bindLatestClinicalNote() {
-        TextView tvClinicalNote = findViewById(R.id.tvClinicalNote);
-        TextView tvClinicalNoteTimestamp = findViewById(R.id.tvClinicalNoteTimestamp);
-        if (tvClinicalNote == null) {
+    private void setupClinicalNotesList() {
+        rvClinicalNotes = findViewById(R.id.rvClinicalNotes);
+        tvClinicalNotesEmpty = findViewById(R.id.tvClinicalNotesEmpty);
+        if (rvClinicalNotes == null) {
+            return;
+        }
+
+        rvClinicalNotes.setLayoutManager(new LinearLayoutManager(this));
+        rvClinicalNotes.setNestedScrollingEnabled(false);
+        clinicalNoteAdapter = new ClinicalNoteAdapter();
+        rvClinicalNotes.setAdapter(clinicalNoteAdapter);
+    }
+
+    private void bindClinicalNotesHistory() {
+        if (clinicalNoteAdapter == null || rvClinicalNotes == null) {
             return;
         }
 
         int id = parseId(patientId);
-        latestNote = id > 0 ? noteRepository.getLatestNoteByPatientId(id) : null;
-        if (latestNote == null || latestNote.getNoteText() == null || latestNote.getNoteText().trim().isEmpty()) {
-            tvClinicalNote.setText("No clinical notes added yet");
-            if (tvClinicalNoteTimestamp != null) {
-                tvClinicalNoteTimestamp.setText("");
-                tvClinicalNoteTimestamp.setVisibility(View.GONE);
-            }
-            return;
-        }
+        List<ClinicalNote> notes = id > 0 ? noteRepository.getNotesByPatientId(id) : java.util.Collections.emptyList();
+        clinicalNoteAdapter.submitNotes(notes);
 
-        tvClinicalNote.setText(latestNote.getNoteText().trim());
-        if (tvClinicalNoteTimestamp != null) {
-            String displayTimestamp = latestNote.getUpdatedAt();
-            if (displayTimestamp == null || displayTimestamp.trim().isEmpty()) {
-                displayTimestamp = latestNote.getCreatedAt();
-            }
-            if (displayTimestamp == null || displayTimestamp.trim().isEmpty()) {
-                tvClinicalNoteTimestamp.setText("");
-                tvClinicalNoteTimestamp.setVisibility(View.GONE);
-            } else {
-                tvClinicalNoteTimestamp.setText("Latest update: " + DateTimeUtils.toRelativeTime(displayTimestamp));
-                tvClinicalNoteTimestamp.setVisibility(View.VISIBLE);
-            }
+        boolean hasNotes = notes != null && !notes.isEmpty();
+        rvClinicalNotes.setVisibility(hasNotes ? View.VISIBLE : View.GONE);
+        if (tvClinicalNotesEmpty != null) {
+            tvClinicalNotesEmpty.setVisibility(hasNotes ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -439,14 +441,19 @@ public class PatientDetailActivity extends AppCompatActivity {
             return;
         }
 
-        ClinicalNote savedNote = noteRepository.saveOrUpdateLatestNote(id, trimmed);
-        if (savedNote == null) {
+        ClinicalNote note = new ClinicalNote(
+                patientId,
+                trimmed,
+                DateTimeUtils.now(),
+                DateTimeUtils.now()
+        );
+        long savedRowId = noteRepository.addNote(note);
+        if (savedRowId <= 0L) {
             Toast.makeText(this, "Unable to save clinical note", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        latestNote = savedNote;
-        bindLatestClinicalNote();
+        bindClinicalNotesHistory();
         Toast.makeText(this, "Clinical note saved", Toast.LENGTH_SHORT).show();
     }
 
@@ -706,6 +713,12 @@ public class PatientDetailActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT
             ).show();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindClinicalNotesHistory();
     }
 
     private int parseId(String rawId) {

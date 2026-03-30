@@ -309,7 +309,7 @@
                         android:textSize="@dimen/text_caption" />
 
                     <TextView
-                        android:id="@+id/tvClinicalNote"
+                        android:id="@+id/tvClinicalNotesEmpty"
                         style="@style/TextAppearance.CritiWatch.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -317,15 +317,14 @@
                         android:text="No clinical notes added yet"
                         android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/tvClinicalNoteTimestamp"
-                        style="@style/TextAppearance.CritiWatch.Secondary"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvClinicalNotes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text=""
-                        android:textSize="11sp"
-                        android:visibility="gone" />
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="gone"
+                        tools:listitem="@layout/item_clinical_note" />
 
                     <Button
                         android:id="@+id/btnAddClinicalNote"

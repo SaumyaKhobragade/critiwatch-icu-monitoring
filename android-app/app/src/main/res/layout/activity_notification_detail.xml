@@ -258,7 +258,7 @@
 
                     <Button
                         android:id="@+id/btnAcknowledgeAlert"
-                        style="@style/Widget.CritiWatch.Button.Secondary"
+                        style="@style/Widget.CritiWatch.Button"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
                         android:layout_marginBottom="@dimen/spacing_md"
@@ -266,7 +266,7 @@
 
                     <Button
                         android:id="@+id/btnDismissAlert"
-                        style="@style/Widget.CritiWatch.Button.Secondary"
+                        style="@style/Widget.CritiWatch.Button"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
                         android:text="Dismiss" />
