@@ -282,7 +282,7 @@
 
             <Button
                 android:id="@+id/btnLoadDemoPatients"
-                style="@style/Widget.CritiWatch.Button.Secondary"
+                style="@style/Widget.CritiWatch.Button"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/button_height"
                 android:layout_marginStart="@dimen/spacing_lg"
