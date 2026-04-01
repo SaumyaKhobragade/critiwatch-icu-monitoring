@@ -191,6 +191,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         TextView tvAlertBannerMessage = findViewById(R.id.tvAlertBannerMessage);
         TextView tvRiskLevel = findViewById(R.id.tvRiskLevel);
         TextView tvPredictionSummary = findViewById(R.id.tvPredictionSummary);
+        TextView tvPredictionTimestamp = findViewById(R.id.tvPredictionTimestamp);
 
         if (tvPatientNameLarge != null) {
             tvPatientNameLarge.setText(patientName);
@@ -227,9 +228,18 @@ public class PatientDetailActivity extends AppCompatActivity {
                 tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_stable));
             }
         }
+        boolean hasStoredPrediction = latestPrediction != null
+                && latestPrediction.getRiskLevel() != null
+                && !latestPrediction.getRiskLevel().trim().isEmpty();
+
         if (tvRiskLevel != null) {
-            tvRiskLevel.setText("Risk Level: " + patientRisk);
-            tvRiskLevel.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(patientRisk)));
+            if (hasStoredPrediction) {
+                tvRiskLevel.setText("Risk Level: " + latestPrediction.getRiskLevel());
+                tvRiskLevel.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(latestPrediction.getRiskLevel())));
+            } else {
+                tvRiskLevel.setText("Risk Level: Not evaluated");
+                tvRiskLevel.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            }
         }
 
         if (tvAlertBannerMessage != null) {
@@ -252,7 +262,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
 
         if (tvPredictionSummary != null) {
-            if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
+            if (hasStoredPrediction && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
                 String summaryText = String.format(Locale.US, "%.0f%% risk score • %s",
                         latestPrediction.getRiskScore(),
                         latestPrediction.getSummary());
@@ -261,7 +271,15 @@ public class PatientDetailActivity extends AppCompatActivity {
                 }
                 tvPredictionSummary.setText(summaryText);
             } else {
-                tvPredictionSummary.setText("Run prediction to generate risk insight from latest vitals.");
+                tvPredictionSummary.setText("No prediction has been run yet.");
+            }
+        }
+
+        if (tvPredictionTimestamp != null) {
+            if (hasStoredPrediction && latestPrediction.getCreatedAt() != null && !latestPrediction.getCreatedAt().trim().isEmpty()) {
+                tvPredictionTimestamp.setText("Last evaluated: " + DateTimeUtils.toRelativeTime(latestPrediction.getCreatedAt()));
+            } else {
+                tvPredictionTimestamp.setText("Last evaluated: --");
             }
         }
     }
@@ -473,8 +491,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         }
 
         LocalPredictionEngine.PredictionResult predictionResult = LocalPredictionEngine.evaluate(latestVital);
-        patientRisk = predictionResult.getRiskLevel();
-        latestPrediction = new Prediction(
+        Prediction predictionToSave = new Prediction(
                 null,
                 patientId,
                 predictionResult.getRiskLevel(),
@@ -482,7 +499,20 @@ public class PatientDetailActivity extends AppCompatActivity {
                 predictionResult.getSummary(),
                 DateTimeUtils.now()
         );
+        long savedPredictionId = predictionRepository.addPrediction(predictionToSave);
+        if (savedPredictionId <= 0L) {
+            Toast.makeText(this, "Failed to save prediction", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        predictionToSave.setId(String.valueOf(savedPredictionId));
+        latestPrediction = predictionRepository.getLatestPredictionByPatientId(id);
+        if (latestPrediction == null) {
+            latestPrediction = predictionToSave;
+        }
+        patientRisk = latestPrediction.getRiskLevel();
         latestPredictionFactors = predictionResult.getFactors();
+        patientRepository.updatePatientRiskLevel(id, patientRisk);
 
         heartRate = latestVital.getHeartRate();
         spo2 = latestVital.getSpo2();
@@ -493,7 +523,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         bindPatientHeader();
         bindVitalCards();
 
-        Toast.makeText(this, "Local prediction updated: " + patientRisk, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Prediction saved: " + patientRisk, Toast.LENGTH_LONG).show();
     }
 
     private void acknowledgeLatestAlert() {
@@ -598,6 +628,15 @@ public class PatientDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        int id = parseId(patientId);
+        if (id > 0) {
+            latestPrediction = predictionRepository.getLatestPredictionByPatientId(id);
+            if (latestPrediction != null && latestPrediction.getRiskLevel() != null && !latestPrediction.getRiskLevel().trim().isEmpty()) {
+                patientRisk = latestPrediction.getRiskLevel();
+            }
+            latestPredictionFactors = new ArrayList<>();
+            bindPatientHeader();
+        }
         bindClinicalNotesHistory();
     }
 
