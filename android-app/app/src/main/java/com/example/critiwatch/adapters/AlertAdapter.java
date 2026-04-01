@@ -50,11 +50,11 @@ public class AlertAdapter extends RecyclerView.Adapter<AlertAdapter.AlertViewHol
         String severity = item.getSeverity() == null ? Constants.RISK_WARNING : item.getSeverity();
         holder.tvSeverityBadge.setText(severity.toUpperCase(Locale.US));
         holder.tvAlertTimestamp.setText(DateTimeUtils.toRelativeTime(item.getTimestamp()));
-        holder.tvAlertValue.setText(item.getValue());
-        holder.tvAlertUnit.setText(item.getUnit());
-        holder.tvAlertType.setText(item.getType());
-        holder.tvAlertPatientName.setText(item.getPatientLabel());
-        holder.tvAlertDescription.setText(item.getDescription());
+        holder.tvAlertValue.setText(safe(item.getValue(), "--"));
+        holder.tvAlertUnit.setText(safe(item.getUnit(), ""));
+        holder.tvAlertType.setText(safe(item.getType(), "Prediction Alert"));
+        holder.tvAlertPatientName.setText(safe(item.getPatientLabel(), "Unknown Patient"));
+        holder.tvAlertDescription.setText(safe(item.getDescription(), "No alert description available."));
 
         int chipBackgroundRes;
         int severityColor;
@@ -93,6 +93,10 @@ public class AlertAdapter extends RecyclerView.Adapter<AlertAdapter.AlertViewHol
                 onAlertActionListener.onMarkResolved(item);
             }
         });
+    }
+
+    private String safe(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value;
     }
 
     @Override

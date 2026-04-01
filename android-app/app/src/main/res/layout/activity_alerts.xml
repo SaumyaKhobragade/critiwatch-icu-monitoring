@@ -131,6 +131,20 @@
         app:layout_constraintTop_toBottomOf="@id/filterScrollView"
         tools:listitem="@layout/item_alert" />
 
+    <TextView
+        android:id="@+id/tvEmptyAlerts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="No alerts to show yet"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterScrollView" />
+
     <!-- Bottom Navigation Placeholder -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         style="@style/Widget.CritiWatch.BottomNavigation"

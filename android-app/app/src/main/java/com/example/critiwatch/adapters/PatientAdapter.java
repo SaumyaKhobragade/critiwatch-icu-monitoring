@@ -41,15 +41,15 @@ public class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientV
     public void onBindViewHolder(@NonNull PatientViewHolder holder, int position) {
         Patient patient = patients.get(position);
 
-        holder.tvPatientName.setText(patient.getName());
-        holder.tvPatientMeta.setText(patient.getMetaLine());
+        holder.tvPatientName.setText(safe(patient.getName(), "Unknown Patient"));
+        holder.tvPatientMeta.setText(safe(patient.getMetaLine(), "Bed -"));
         holder.tvHeartRate.setText(String.valueOf(patient.getHeartRate()));
         holder.tvSpo2.setText(patient.getSpo2() + "%");
-        holder.tvBloodPressure.setText(patient.getBloodPressure());
+        holder.tvBloodPressure.setText(safe(patient.getBloodPressure(), "--/--"));
         holder.tvRespRate.setText(String.valueOf(patient.getRespiratoryRate()));
-        holder.tvLastUpdated.setText("Last updated: " + patient.getLastUpdated());
+        holder.tvLastUpdated.setText("Last updated: " + safe(patient.getLastUpdated(), "--"));
 
-        String risk = patient.getRiskLevel();
+        String risk = safe(patient.getRiskLevel(), Constants.RISK_STABLE);
         String riskUpper = risk.toUpperCase(Locale.US);
         holder.tvStatusBadge.setText(riskUpper);
 
@@ -71,6 +71,10 @@ public class PatientAdapter extends RecyclerView.Adapter<PatientAdapter.PatientV
         };
         holder.itemView.setOnClickListener(clickListener);
         holder.tvViewDetails.setOnClickListener(clickListener);
+    }
+
+    private String safe(String value, String fallback) {
+        return value == null || value.trim().isEmpty() ? fallback : value;
     }
 
     @Override

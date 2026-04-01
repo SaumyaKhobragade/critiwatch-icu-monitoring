@@ -153,8 +153,21 @@ public class AlertsActivity extends AppCompatActivity {
         if (alertAdapter != null) {
             alertAdapter.notifyDataSetChanged();
         }
+        bindEmptyState();
         updateFilterChipStyles();
         bindHeaderCount();
+    }
+
+    private void bindEmptyState() {
+        RecyclerView rvAlerts = findViewById(R.id.rvAlerts);
+        TextView tvEmptyAlerts = findViewById(R.id.tvEmptyAlerts);
+        boolean isEmpty = filteredAlerts.isEmpty();
+        if (rvAlerts != null) {
+            rvAlerts.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+        }
+        if (tvEmptyAlerts != null) {
+            tvEmptyAlerts.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
+        }
     }
 
     private boolean matchesCurrentFilter(AlertItem alert) {

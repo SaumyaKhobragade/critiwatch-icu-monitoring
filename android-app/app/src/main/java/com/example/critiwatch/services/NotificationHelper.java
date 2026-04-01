@@ -1,5 +1,6 @@
 package com.example.critiwatch.services;
 
+import android.annotation.SuppressLint;
 import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationChannel;
@@ -56,6 +57,7 @@ public class NotificationHelper {
         manager.createNotificationChannel(channel);
     }
 
+    @SuppressLint("MissingPermission")
     public static boolean showAlertNotification(Context context, AlertItem alertItem) {
         if (context == null || alertItem == null) {
             return false;
@@ -94,8 +96,12 @@ public class NotificationHelper {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
-        NotificationManagerCompat.from(context).notify(notificationId, builder.build());
-        return true;
+        try {
+            NotificationManagerCompat.from(context).notify(notificationId, builder.build());
+            return true;
+        } catch (SecurityException ignored) {
+            return false;
+        }
     }
 
     public static boolean hasNotificationPermission(Context context) {

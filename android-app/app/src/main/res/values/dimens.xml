@@ -32,4 +32,5 @@
     <dimen name="border_width">1dp</dimen>
     <dimen name="chip_radius">999dp</dimen>
     <dimen name="bottom_nav_height">56dp</dimen>
+    <dimen name="fab_margin">48dp</dimen>
 </resources>

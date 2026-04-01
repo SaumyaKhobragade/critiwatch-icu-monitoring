@@ -27,7 +27,7 @@
             android:layout_gravity="start"
             android:contentDescription="Back"
             android:src="@drawable/ic_action_back"
-            android:tint="@color/text_primary" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvAlertIcon"
