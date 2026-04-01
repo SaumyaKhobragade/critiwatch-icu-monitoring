@@ -21,12 +21,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.services.DemoHistorySeeder;
 import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.services.ValidationService;
 import com.example.critiwatch.utils.Constants;
@@ -67,6 +69,7 @@ public class AddPatientActivity extends AppCompatActivity {
 
     private PatientRepository patientRepository;
     private AlertRepository alertRepository;
+    private VitalDao vitalDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +78,7 @@ public class AddPatientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_patient);
         patientRepository = new PatientRepository(this);
         alertRepository = new AlertRepository(this);
+        vitalDao = new VitalDao(this);
         NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -269,6 +273,7 @@ public class AddPatientActivity extends AppCompatActivity {
             Toast.makeText(this, "Failed to save patient locally", Toast.LENGTH_LONG).show();
             return;
         }
+        int seededHistoryCount = seedDemoHistoryVitals(patientId, initialVital, riskLevel);
 
         boolean alertCreated = false;
         boolean notificationSent = false;
@@ -308,14 +313,36 @@ public class AddPatientActivity extends AppCompatActivity {
             Toast.makeText(
                     this,
                     notificationSent
-                            ? "Patient saved. Risk alert created and notification sent."
-                            : "Patient saved. Risk alert created.",
+                            ? "Patient saved with " + seededHistoryCount + " demo history points. Risk alert created and notification sent."
+                            : "Patient saved with " + seededHistoryCount + " demo history points. Risk alert created.",
                     Toast.LENGTH_SHORT
             ).show();
         } else {
-            Toast.makeText(this, "Patient saved to local database", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Patient saved with " + seededHistoryCount + " demo history points", Toast.LENGTH_SHORT).show();
         }
         finish();
+    }
+
+    private int seedDemoHistoryVitals(long patientId, VitalSign currentVital, String riskLevel) {
+        if (patientId <= 0 || currentVital == null || vitalDao == null) {
+            return 0;
+        }
+
+        currentVital.setPatientId(String.valueOf(patientId));
+        List<VitalSign> historicalVitals = DemoHistorySeeder.generatePastVitals(
+                String.valueOf(patientId),
+                currentVital,
+                riskLevel,
+                10
+        );
+
+        int insertedCount = 0;
+        for (VitalSign vitalSign : historicalVitals) {
+            if (vitalDao.insertVital(vitalSign) > 0L) {
+                insertedCount++;
+            }
+        }
+        return insertedCount;
     }
 
     private String buildPrimaryAlertValue(RiskUtils.EvaluationResult evaluationResult, VitalSign vitalSign) {
