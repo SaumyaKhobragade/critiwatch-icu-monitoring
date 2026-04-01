@@ -11,8 +11,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -54,6 +56,7 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
         patientRepository = new PatientRepository(this);
         DatabaseSeeder.seedIfEmpty(this);
+        DatabaseSeeder.backfillExistingDemoPatients(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -69,6 +72,11 @@ public class DashboardActivity extends AppCompatActivity {
         Button btnAddPatient = findViewById(R.id.btnAddPatient);
         if (btnAddPatient != null) {
             btnAddPatient.setOnClickListener(v -> startActivity(new Intent(this, AddPatientActivity.class)));
+        }
+
+        Button btnLoadDemoPatients = findViewById(R.id.btnLoadDemoPatients);
+        if (btnLoadDemoPatients != null) {
+            btnLoadDemoPatients.setOnClickListener(v -> showLoadDemoPatientsDialog());
         }
 
         ImageView ivProfile = findViewById(R.id.ivProfile);
@@ -329,5 +337,36 @@ public class DashboardActivity extends AppCompatActivity {
         Intent intent = new Intent(this, PatientDetailActivity.class);
         intent.putExtra(Constants.EXTRA_PATIENT_ID, patient.getId());
         startActivity(intent);
+    }
+
+    private void showLoadDemoPatientsDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Load Demo Patients")
+                .setMessage("Load demo patients and sample history into the app?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Load", (dialog, which) -> loadDemoPatients())
+                .show();
+    }
+
+    private void loadDemoPatients() {
+        DatabaseSeeder.DemoLoadResult result = DatabaseSeeder.loadDemoPatientsIfMissing(this);
+        loadPatientsFromDatabase();
+
+        if (result.isSkippedAsAlreadyLoaded()) {
+            Toast.makeText(this, "Demo patients already loaded", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!result.hasAnyInsertions()) {
+            Toast.makeText(this, "No demo changes were needed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String message = "Demo data ready: "
+                + result.getInsertedPatients() + " patients, "
+                + result.getInsertedVitals() + " vitals, "
+                + result.getInsertedPredictions() + " predictions, "
+                + result.getInsertedAlerts() + " alerts.";
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }
