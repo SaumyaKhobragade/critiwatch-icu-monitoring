@@ -1,5 +1,7 @@
 package com.example.critiwatch;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -39,9 +41,9 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -64,6 +66,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
     private String patientBed;
     private String selectedMetric = METRIC_ALL;
     private Date activeFilterStart;
+    private Calendar filterCalendar;
+    private boolean hasDateSelection;
+    private boolean hasTimeSelection;
 
     private VitalDao vitalDao;
     private PatientDao patientDao;
@@ -71,6 +76,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
 
     private Spinner spinnerMetric;
     private TextView tvEmptyHistory;
+    private TextView tvSelectedDate;
+    private TextView tvSelectedTime;
+    private Button btnApplyFilter;
     private RecyclerView rvVitalHistory;
     private CardView cardHeartRateChart;
     private CardView cardSpo2Chart;
@@ -105,7 +113,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
         bindViews();
         bindPatientHeader();
         setupMetricSpinner();
-        setupOptionalDateTimeFilter();
+        setupDateTimeFilterControls();
         setupReadingRecyclerView();
         configureCharts();
         setupClickActions();
@@ -122,6 +130,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
     private void bindViews() {
         spinnerMetric = findViewById(R.id.spinnerMetric);
         tvEmptyHistory = findViewById(R.id.tvEmptyHistory);
+        tvSelectedDate = findViewById(R.id.tvSelectedDate);
+        tvSelectedTime = findViewById(R.id.tvSelectedTime);
+        btnApplyFilter = findViewById(R.id.btnApplyFilter);
 
         rvVitalHistory = findViewById(R.id.rvVitalHistory);
         if (rvVitalHistory == null) {
@@ -233,31 +244,118 @@ public class GraphHistoryActivity extends AppCompatActivity {
         });
     }
 
-    private void setupOptionalDateTimeFilter() {
-        Button btnApplyFilter = findOptionalButtonByName("btnApplyFilter");
-        if (btnApplyFilter == null) {
+    private void setupDateTimeFilterControls() {
+        if (tvSelectedDate == null || tvSelectedTime == null || btnApplyFilter == null) {
             return;
         }
 
-        btnApplyFilter.setOnClickListener(v -> {
-            String selectedDate = getOptionalTextByIdName("tvSelectedDate", "etDate");
-            String selectedTime = getOptionalTextByIdName("tvSelectedTime", "etTime");
+        filterCalendar = Calendar.getInstance();
+        hasDateSelection = false;
+        hasTimeSelection = false;
+        renderSelectedFilterText();
 
-            if (selectedDate.isEmpty() && selectedTime.isEmpty()) {
+        tvSelectedDate.setOnClickListener(v -> showDatePickerDialog());
+        tvSelectedTime.setOnClickListener(v -> showTimePickerDialog());
+        btnApplyFilter.setOnClickListener(v -> {
+            if (!hasDateSelection && !hasTimeSelection) {
                 activeFilterStart = null;
                 applyHistoryFiltersAndRender();
                 Toast.makeText(this, "Date/time filter cleared", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Date parsed = parseFlexibleDateTime(selectedDate, selectedTime);
-            if (parsed == null) {
-                Toast.makeText(this, "Invalid date/time filter", Toast.LENGTH_SHORT).show();
-                return;
+            if (!hasDateSelection && hasTimeSelection) {
+                // If only time is selected, apply it from today.
+                Calendar today = Calendar.getInstance();
+                filterCalendar.set(Calendar.YEAR, today.get(Calendar.YEAR));
+                filterCalendar.set(Calendar.MONTH, today.get(Calendar.MONTH));
+                filterCalendar.set(Calendar.DAY_OF_MONTH, today.get(Calendar.DAY_OF_MONTH));
+                hasDateSelection = true;
             }
-            activeFilterStart = parsed;
+
+            if (hasDateSelection && !hasTimeSelection) {
+                filterCalendar.set(Calendar.HOUR_OF_DAY, 0);
+                filterCalendar.set(Calendar.MINUTE, 0);
+                filterCalendar.set(Calendar.SECOND, 0);
+                filterCalendar.set(Calendar.MILLISECOND, 0);
+            }
+
+            activeFilterStart = filterCalendar.getTime();
             applyHistoryFiltersAndRender();
+            Toast.makeText(this, "Filter applied", Toast.LENGTH_SHORT).show();
         });
+
+        tvSelectedDate.setOnLongClickListener(v -> {
+            hasDateSelection = false;
+            activeFilterStart = null;
+            renderSelectedFilterText();
+            applyHistoryFiltersAndRender();
+            Toast.makeText(this, "Date filter cleared", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+
+        tvSelectedTime.setOnLongClickListener(v -> {
+            hasTimeSelection = false;
+            activeFilterStart = null;
+            renderSelectedFilterText();
+            applyHistoryFiltersAndRender();
+            Toast.makeText(this, "Time filter cleared", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+    }
+
+    private void showDatePickerDialog() {
+        Calendar source = filterCalendar == null ? Calendar.getInstance() : filterCalendar;
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    filterCalendar.set(Calendar.YEAR, year);
+                    filterCalendar.set(Calendar.MONTH, month);
+                    filterCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                    hasDateSelection = true;
+                    renderSelectedFilterText();
+                },
+                source.get(Calendar.YEAR),
+                source.get(Calendar.MONTH),
+                source.get(Calendar.DAY_OF_MONTH)
+        );
+        dialog.show();
+    }
+
+    private void showTimePickerDialog() {
+        Calendar source = filterCalendar == null ? Calendar.getInstance() : filterCalendar;
+        TimePickerDialog dialog = new TimePickerDialog(
+                this,
+                (view, hourOfDay, minute) -> {
+                    filterCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                    filterCalendar.set(Calendar.MINUTE, minute);
+                    filterCalendar.set(Calendar.SECOND, 0);
+                    filterCalendar.set(Calendar.MILLISECOND, 0);
+                    hasTimeSelection = true;
+                    renderSelectedFilterText();
+                },
+                source.get(Calendar.HOUR_OF_DAY),
+                source.get(Calendar.MINUTE),
+                true
+        );
+        dialog.show();
+    }
+
+    private void renderSelectedFilterText() {
+        if (tvSelectedDate != null) {
+            if (hasDateSelection) {
+                tvSelectedDate.setText(new SimpleDateFormat("dd MMM yyyy", Locale.US).format(filterCalendar.getTime()));
+            } else {
+                tvSelectedDate.setText("Select Date");
+            }
+        }
+        if (tvSelectedTime != null) {
+            if (hasTimeSelection) {
+                tvSelectedTime.setText(new SimpleDateFormat("HH:mm", Locale.US).format(filterCalendar.getTime()));
+            } else {
+                tvSelectedTime.setText("Select Time");
+            }
+        }
     }
 
     private void setupReadingRecyclerView() {
@@ -348,6 +446,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
         boolean empty = visibleVitalHistory.isEmpty();
         if (tvEmptyHistory != null) {
             tvEmptyHistory.setVisibility(empty ? View.VISIBLE : View.GONE);
+            if (empty) {
+                tvEmptyHistory.setText("No vital history available for this patient yet.");
+            }
         }
         if (rvVitalHistory != null) {
             rvVitalHistory.setVisibility(empty ? View.GONE : View.VISIBLE);
@@ -355,6 +456,14 @@ public class GraphHistoryActivity extends AppCompatActivity {
     }
 
     private void updateChartVisibility() {
+        if (visibleVitalHistory.isEmpty()) {
+            setVisible(cardHeartRateChart, false);
+            setVisible(cardSpo2Chart, false);
+            setVisible(cardBloodPressureChart, false);
+            setVisible(cardTemperatureChart, false);
+            return;
+        }
+
         if (METRIC_ALL.equals(selectedMetric)) {
             setVisible(cardHeartRateChart, true);
             setVisible(cardSpo2Chart, true);
@@ -377,7 +486,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 buildHeartRateEntries(chartVitals),
                 "Heart Rate",
                 ContextCompat.getColor(this, R.color.primary_accent),
-                xLabels
+                xLabels,
+                35f,
+                190f
         );
 
         renderSingleLineChart(
@@ -385,7 +496,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 buildSpo2Entries(chartVitals),
                 "SpO2",
                 ContextCompat.getColor(this, R.color.info_accent),
-                xLabels
+                xLabels,
+                70f,
+                100f
         );
 
         renderBloodPressureChart(
@@ -400,7 +513,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 buildTemperatureEntries(chartVitals),
                 "Temperature",
                 ContextCompat.getColor(this, R.color.status_warning),
-                xLabels
+                xLabels,
+                33f,
+                42f
         );
     }
 
@@ -409,7 +524,9 @@ public class GraphHistoryActivity extends AppCompatActivity {
             List<Entry> entries,
             String label,
             int color,
-            List<String> xLabels
+            List<String> xLabels,
+            float yMin,
+            float yMax
     ) {
         if (chart == null) {
             return;
@@ -421,6 +538,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
         }
 
         LineDataSet dataSet = createDataSet(entries, label, color);
+        applyYAxisBounds(chart, entries, yMin, yMax);
         chart.setData(new LineData(dataSet));
         applyXAxisLabels(chart, xLabels);
         chart.invalidate();
@@ -460,6 +578,10 @@ public class GraphHistoryActivity extends AppCompatActivity {
             lineData.addDataSet(diastolicSet);
         }
 
+        List<Entry> mergedEntries = new ArrayList<>();
+        mergedEntries.addAll(systolicEntries);
+        mergedEntries.addAll(diastolicEntries);
+        applyYAxisBounds(chart, mergedEntries, 40f, 220f);
         chart.setData(lineData);
         applyXAxisLabels(chart, xLabels);
         chart.invalidate();
@@ -468,10 +590,12 @@ public class GraphHistoryActivity extends AppCompatActivity {
     private LineDataSet createDataSet(List<Entry> entries, String label, int color) {
         LineDataSet dataSet = new LineDataSet(entries, label);
         dataSet.setColor(color);
-        dataSet.setLineWidth(2f);
+        dataSet.setLineWidth(2.2f);
         dataSet.setDrawValues(false);
-        dataSet.setDrawCircles(false);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet.setDrawCircles(entries.size() <= 24);
+        dataSet.setCircleColor(color);
+        dataSet.setCircleRadius(2.4f);
+        dataSet.setMode(LineDataSet.Mode.LINEAR);
         dataSet.setHighLightColor(color);
         return dataSet;
     }
@@ -489,6 +613,41 @@ public class GraphHistoryActivity extends AppCompatActivity {
                 return labels.get(index);
             }
         });
+    }
+
+    private void applyYAxisBounds(LineChart chart, List<Entry> entries, float hardMin, float hardMax) {
+        if (chart == null || entries == null || entries.isEmpty()) {
+            return;
+        }
+
+        float min = Float.MAX_VALUE;
+        float max = Float.MIN_VALUE;
+        for (Entry entry : entries) {
+            min = Math.min(min, entry.getY());
+            max = Math.max(max, entry.getY());
+        }
+
+        if (min == Float.MAX_VALUE || max == Float.MIN_VALUE) {
+            return;
+        }
+
+        float padding = Math.max(2f, (max - min) * 0.15f);
+        float axisMin = min - padding;
+        float axisMax = max + padding;
+
+        if (!Float.isNaN(hardMin)) {
+            axisMin = Math.max(hardMin, axisMin);
+        }
+        if (!Float.isNaN(hardMax)) {
+            axisMax = Math.min(hardMax, axisMax);
+        }
+        if (axisMax - axisMin < 1f) {
+            axisMax = axisMin + 1f;
+        }
+
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setAxisMinimum(axisMin);
+        leftAxis.setAxisMaximum(axisMax);
     }
 
     private List<Entry> buildHeartRateEntries(List<VitalSign> vitals) {
@@ -616,68 +775,6 @@ public class GraphHistoryActivity extends AppCompatActivity {
             }
             return false;
         });
-    }
-
-    private Date parseFlexibleDateTime(String date, String time) {
-        String safeDate = date == null ? "" : date.trim();
-        String safeTime = time == null ? "" : time.trim();
-
-        if (safeDate.isEmpty() && safeTime.isEmpty()) {
-            return null;
-        }
-
-        List<String> candidates = new ArrayList<>();
-        if (!safeDate.isEmpty() && !safeTime.isEmpty()) {
-            candidates.add(safeDate + " " + safeTime);
-        } else if (!safeDate.isEmpty()) {
-            candidates.add(safeDate + " 00:00");
-        } else {
-            return null;
-        }
-
-        String[] patterns = new String[]{
-                "dd/MM/yyyy HH:mm",
-                "dd-MM-yyyy HH:mm",
-                "yyyy-MM-dd HH:mm",
-                "MM/dd/yyyy HH:mm",
-                "dd/MM/yyyy hh:mm a",
-                "dd-MM-yyyy hh:mm a",
-                "yyyy-MM-dd hh:mm a",
-                "MM/dd/yyyy hh:mm a"
-        };
-
-        for (String candidate : candidates) {
-            for (String pattern : patterns) {
-                try {
-                    SimpleDateFormat parser = new SimpleDateFormat(pattern, Locale.US);
-                    parser.setLenient(false);
-                    Date parsed = parser.parse(candidate);
-                    if (parsed != null) {
-                        return parsed;
-                    }
-                } catch (ParseException ignored) {
-                    // Continue trying next format.
-                }
-            }
-        }
-        return null;
-    }
-
-    private String getOptionalTextByIdName(String... idNames) {
-        for (String idName : idNames) {
-            int viewId = getResources().getIdentifier(idName, "id", getPackageName());
-            if (viewId == 0) {
-                continue;
-            }
-            View view = findViewById(viewId);
-            if (view instanceof TextView) {
-                String value = ((TextView) view).getText().toString().trim();
-                if (!value.isEmpty()) {
-                    return value;
-                }
-            }
-        }
-        return "";
     }
 
     private Button findOptionalButtonByName(String idName) {

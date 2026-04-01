@@ -181,6 +181,49 @@
                     android:background="@drawable/bg_edit_text" />
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/spacing_lg">
+
+                <TextView
+                    android:id="@+id/tvSelectedDate"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_edit_text"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/spacing_md"
+                    android:text="Select Date"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_body" />
+
+                <TextView
+                    android:id="@+id/tvSelectedTime"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_edit_text"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/spacing_md"
+                    android:text="Select Time"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/text_body" />
+
+                <Button
+                    android:id="@+id/btnApplyFilter"
+                    style="@style/Widget.CritiWatch.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/input_height"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="@dimen/spacing_md"
+                    android:text="Apply" />
+            </LinearLayout>
+
             <!-- Chart Cards Container -->
             <LinearLayout
                 android:layout_width="match_parent"

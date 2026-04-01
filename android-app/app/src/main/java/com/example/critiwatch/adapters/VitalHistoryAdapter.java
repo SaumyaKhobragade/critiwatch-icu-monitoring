@@ -12,12 +12,16 @@ import com.example.critiwatch.R;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.utils.DateTimeUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class VitalHistoryAdapter extends RecyclerView.Adapter<VitalHistoryAdapter.VitalHistoryViewHolder> {
 
     private final List<VitalSign> vitalSigns;
+    private final SimpleDateFormat rowDateFormatter = new SimpleDateFormat("dd MMM", Locale.US);
+    private final SimpleDateFormat rowTimeFormatter = new SimpleDateFormat("HH:mm", Locale.US);
 
     public VitalHistoryAdapter(List<VitalSign> vitalSigns) {
         this.vitalSigns = vitalSigns;
@@ -34,7 +38,7 @@ public class VitalHistoryAdapter extends RecyclerView.Adapter<VitalHistoryAdapte
     public void onBindViewHolder(@NonNull VitalHistoryViewHolder holder, int position) {
         VitalSign vitalSign = vitalSigns.get(position);
         String recordedAt = vitalSign.getTimestamp();
-        holder.tvReadingTime.setText(DateTimeUtils.toRelativeTime(recordedAt));
+        holder.tvReadingTime.setText(formatReadingTimestamp(recordedAt));
         holder.tvHistoryHr.setText(String.valueOf(vitalSign.getHeartRate()));
         holder.tvHistorySpO2.setText(vitalSign.getSpo2() + "%");
         holder.tvHistoryBp.setText(vitalSign.getBloodPressure());
@@ -45,6 +49,16 @@ public class VitalHistoryAdapter extends RecyclerView.Adapter<VitalHistoryAdapte
     @Override
     public int getItemCount() {
         return vitalSigns.size();
+    }
+
+    private String formatReadingTimestamp(String timestamp) {
+        Date parsed = DateTimeUtils.parse(timestamp);
+        if (parsed == null) {
+            return timestamp == null ? "--" : timestamp;
+        }
+        String datePart = rowDateFormatter.format(parsed);
+        String timePart = rowTimeFormatter.format(parsed);
+        return datePart + "\n" + timePart;
     }
 
     static class VitalHistoryViewHolder extends RecyclerView.ViewHolder {
