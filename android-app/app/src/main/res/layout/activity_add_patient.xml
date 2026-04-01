@@ -59,33 +59,6 @@
             android:orientation="vertical"
             android:padding="@dimen/spacing_lg">
 
-            <LinearLayout
-                android:id="@+id/btnScanWristband"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/spacing_lg"
-                android:background="@drawable/bg_section_soft"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="@dimen/spacing_lg">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="@dimen/spacing_sm"
-                    android:src="@drawable/ic_action_camera"
-                    app:tint="@color/primary_accent" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Scan Patient Wristband"
-                    android:textColor="@color/primary_accent"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
             <androidx.cardview.widget.CardView
                 style="@style/Widget.CritiWatch.CardView"
                 android:layout_width="match_parent"

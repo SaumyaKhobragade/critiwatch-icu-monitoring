@@ -326,13 +326,6 @@ public class PatientDetailActivity extends AppCompatActivity {
                 "C",
                 getTemperatureColor(temperature)
         );
-        bindMetricCard(
-                findViewById(R.id.cardVitalGlucose),
-                "Glucose",
-                "118",
-                "mg/dL",
-                R.color.status_stable
-        );
     }
 
     private void bindMetricCard(View cardView, String label, String value, String unit, int colorRes) {

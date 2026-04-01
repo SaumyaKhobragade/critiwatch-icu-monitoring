@@ -254,8 +254,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/spacing_md"
-                android:columnCount="2"
-                android:rowCount="3">
+                android:columnCount="2">
 
                 <!-- HR -->
                 <include
@@ -297,13 +296,6 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
 
-                <!-- Glucose -->
-                <include
-                    android:id="@+id/cardVitalGlucose"
-                    layout="@layout/item_vital_metric"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1" />
             </GridLayout>
 
             <!-- Clinical Notes Card -->

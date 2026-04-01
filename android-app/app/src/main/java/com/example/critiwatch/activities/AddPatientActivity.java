@@ -123,12 +123,6 @@ public class AddPatientActivity extends AppCompatActivity {
             btnResetPatient.setOnClickListener(v -> resetForm());
         }
 
-        View btnScanWristband = findViewById(R.id.btnScanWristband);
-        if (btnScanWristband != null) {
-            btnScanWristband.setOnClickListener(v ->
-                    Toast.makeText(this, "Wristband scanner not implemented yet", Toast.LENGTH_SHORT).show()
-            );
-        }
     }
 
     private void setupSexSpinner() {

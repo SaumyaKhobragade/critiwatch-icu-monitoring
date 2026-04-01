@@ -1,6 +1,8 @@
 package com.example.critiwatch;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -45,6 +47,7 @@ public class SettingsActivity extends AppCompatActivity {
             return insets;
         });
         bindProfileData();
+        bindSettingsSummary();
 
         TextView btnViewProfileLink = findViewById(R.id.btnViewProfileLink);
         if (btnViewProfileLink != null) {
@@ -63,6 +66,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         bindProfileData();
+        bindSettingsSummary();
     }
 
     private void setupBottomNavigation() {
@@ -116,14 +120,46 @@ public class SettingsActivity extends AppCompatActivity {
             tvSettingsProfileName.setText(userName);
         }
 
-        TextView tvSettingsProfileMeta = findViewById(R.id.tvSettingsProfileMeta);
-        if (tvSettingsProfileMeta != null) {
-            tvSettingsProfileMeta.setText(userRole + " • " + userEmail);
+        TextView tvSettingsProfileEmail = findViewById(R.id.tvSettingsProfileEmail);
+        if (tvSettingsProfileEmail != null) {
+            tvSettingsProfileEmail.setText(userEmail);
+        }
+
+        TextView tvSettingsProfileRole = findViewById(R.id.tvSettingsProfileRole);
+        if (tvSettingsProfileRole != null) {
+            tvSettingsProfileRole.setText(userRole);
         }
 
         TextView tvAvatarSmall = findViewById(R.id.tvAvatarSmall);
         if (tvAvatarSmall != null) {
             tvAvatarSmall.setText(buildInitials(userName));
+        }
+    }
+
+    private void bindSettingsSummary() {
+        TextView tvSettingsDefaultWard = findViewById(R.id.tvSettingsDefaultWard);
+        if (tvSettingsDefaultWard != null) {
+            tvSettingsDefaultWard.setText("ICU-01");
+        }
+
+        TextView tvSettingsDemoMode = findViewById(R.id.tvSettingsDemoMode);
+        if (tvSettingsDemoMode != null) {
+            tvSettingsDemoMode.setText("Enabled");
+        }
+
+        TextView tvSettingsAppVersion = findViewById(R.id.tvSettingsAppVersion);
+        if (tvSettingsAppVersion != null) {
+            tvSettingsAppVersion.setText(getAppVersionText());
+        }
+    }
+
+    private String getAppVersionText() {
+        try {
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            long versionCode = packageInfo.getLongVersionCode();
+            return packageInfo.versionName + " (" + versionCode + ")";
+        } catch (PackageManager.NameNotFoundException ignored) {
+            return "1.0 (1)";
         }
     }
 
