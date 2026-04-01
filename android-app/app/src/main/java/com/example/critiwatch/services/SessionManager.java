@@ -7,6 +7,9 @@ public class SessionManager {
 
     private static final String PREF_NAME = "critiwatch_session";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+    private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_USER_EMAIL = "user_email";
+    private static final String KEY_USER_ROLE = "user_role";
 
     private final SharedPreferences preferences;
 
@@ -18,6 +21,9 @@ public class SessionManager {
     public void createLoginSession(String userName, String userEmail, String userRole) {
         preferences.edit()
                 .putBoolean(KEY_IS_LOGGED_IN, true)
+                .putString(KEY_USER_NAME, safe(userName))
+                .putString(KEY_USER_EMAIL, safe(userEmail))
+                .putString(KEY_USER_ROLE, safe(userRole))
                 .apply();
     }
 
@@ -26,18 +32,22 @@ public class SessionManager {
     }
 
     public String getUserName() {
-        return "";
+        return preferences.getString(KEY_USER_NAME, "");
     }
 
     public String getUserEmail() {
-        return "";
+        return preferences.getString(KEY_USER_EMAIL, "");
     }
 
     public String getUserRole() {
-        return "";
+        return preferences.getString(KEY_USER_ROLE, "");
     }
 
     public void clearSession() {
         preferences.edit().clear().apply();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 }
