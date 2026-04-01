@@ -739,13 +739,6 @@ public class GraphHistoryActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
-        ImageView ivExport = findViewById(R.id.ivExport);
-        if (ivExport != null) {
-            ivExport.setOnClickListener(v ->
-                    Toast.makeText(this, "CSV/PDF export will be added with backend layer", Toast.LENGTH_SHORT).show()
-            );
-        }
-
         Button btnViewFullHistory = findViewById(R.id.btnViewFullHistory);
         if (btnViewFullHistory != null) {
             btnViewFullHistory.setOnClickListener(v ->
