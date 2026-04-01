@@ -513,6 +513,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientRisk = latestPrediction.getRiskLevel();
         latestPredictionFactors = predictionResult.getFactors();
         patientRepository.updatePatientRiskLevel(id, patientRisk);
+        maybeGeneratePredictionAlert(id, predictionResult);
 
         heartRate = latestVital.getHeartRate();
         spo2 = latestVital.getSpo2();
@@ -524,6 +525,62 @@ public class PatientDetailActivity extends AppCompatActivity {
         bindVitalCards();
 
         Toast.makeText(this, "Prediction saved: " + patientRisk, Toast.LENGTH_LONG).show();
+    }
+
+    private void maybeGeneratePredictionAlert(int patientDbId, LocalPredictionEngine.PredictionResult predictionResult) {
+        if (predictionResult == null || patientDbId <= 0) {
+            return;
+        }
+
+        String riskLevel = predictionResult.getRiskLevel();
+        if (!Constants.RISK_WARNING.equalsIgnoreCase(riskLevel)
+                && !Constants.RISK_CRITICAL.equalsIgnoreCase(riskLevel)) {
+            latestAlert = alertRepository.getLatestAlertByPatientId(patientDbId);
+            return;
+        }
+
+        String alertType;
+        String messagePrefix;
+        if (Constants.RISK_CRITICAL.equalsIgnoreCase(riskLevel)) {
+            alertType = Constants.ALERT_TYPE_CRITICAL;
+            messagePrefix = "Prediction indicates critical deterioration risk requiring immediate attention.";
+        } else {
+            alertType = Constants.ALERT_TYPE_WARNING;
+            messagePrefix = "Prediction indicates warning-level deterioration risk.";
+        }
+
+        String summary = predictionResult.getSummary() == null ? "" : predictionResult.getSummary().trim();
+        String message = summary.isEmpty() ? messagePrefix : messagePrefix + " " + summary;
+        int confidence = (int) Math.round(predictionResult.getRiskScore());
+
+        AlertItem predictionAlert = new AlertItem(
+                null,
+                String.valueOf(patientDbId),
+                alertType,
+                riskLevel,
+                message,
+                DateTimeUtils.now(),
+                String.valueOf(confidence),
+                "%",
+                confidence,
+                false
+        );
+
+        long insertedId = alertRepository.addAlertIfNotRecentDuplicate(predictionAlert, 15);
+        if (insertedId > 0L) {
+            latestAlert = alertRepository.getAlertById((int) insertedId);
+            Toast.makeText(
+                    this,
+                    Constants.RISK_CRITICAL.equalsIgnoreCase(riskLevel)
+                            ? "Critical alert generated"
+                            : "Warning alert generated",
+                    Toast.LENGTH_SHORT
+            ).show();
+            return;
+        }
+
+        latestAlert = alertRepository.getLatestAlertByPatientId(patientDbId);
+        Toast.makeText(this, "Similar active alert already exists", Toast.LENGTH_SHORT).show();
     }
 
     private void acknowledgeLatestAlert() {
@@ -635,6 +692,7 @@ public class PatientDetailActivity extends AppCompatActivity {
                 patientRisk = latestPrediction.getRiskLevel();
             }
             latestPredictionFactors = new ArrayList<>();
+            latestAlert = alertRepository.getLatestAlertByPatientId(id);
             bindPatientHeader();
         }
         bindClinicalNotesHistory();

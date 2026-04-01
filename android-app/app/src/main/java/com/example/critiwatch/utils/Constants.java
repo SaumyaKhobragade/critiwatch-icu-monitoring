@@ -32,4 +32,9 @@ public class Constants {
     public static final String RISK_CRITICAL = "Critical";
     public static final String RISK_WARNING = "Warning";
     public static final String RISK_STABLE = "Stable";
+
+    // Alert types
+    public static final String ALERT_TYPE_PREDICTION = "Prediction Alert";
+    public static final String ALERT_TYPE_WARNING = "Deterioration Warning";
+    public static final String ALERT_TYPE_CRITICAL = "Critical Deterioration Alert";
 }
