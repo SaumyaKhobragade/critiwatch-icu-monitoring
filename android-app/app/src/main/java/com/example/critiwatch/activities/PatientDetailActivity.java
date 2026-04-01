@@ -1,9 +1,7 @@
 package com.example.critiwatch;
 
 import android.app.AlertDialog;
-import android.content.pm.PackageManager;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -16,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -36,20 +33,17 @@ import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.NoteRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
-import com.example.critiwatch.services.NotificationHelper;
+import com.example.critiwatch.services.LocalPredictionEngine;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
-import com.example.critiwatch.utils.RiskUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
-
-    private static final int REQ_POST_NOTIFICATIONS = 2101;
-    private static final int DUPLICATE_ALERT_WINDOW_MINUTES = 10;
 
     private AlertRepository alertRepository;
     private NoteRepository noteRepository;
@@ -72,6 +66,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private VitalSign latestVital;
     private Prediction latestPrediction;
     private AlertItem latestAlert;
+    private List<String> latestPredictionFactors = new ArrayList<>();
     private RecyclerView rvClinicalNotes;
     private TextView tvClinicalNotesEmpty;
     private ClinicalNoteAdapter clinicalNoteAdapter;
@@ -87,7 +82,6 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
         vitalDao = new VitalDao(this);
-        NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -161,6 +155,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         if (latestPrediction != null && latestPrediction.getRiskLevel() != null && !latestPrediction.getRiskLevel().trim().isEmpty()) {
             patientRisk = latestPrediction.getRiskLevel();
         }
+        latestPredictionFactors = new ArrayList<>();
 
         latestAlert = alertRepository.getLatestAlertByPatientId(id);
         if (latestAlert != null && (patientRisk == null || patientRisk.trim().isEmpty())) {
@@ -194,6 +189,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         TextView tvPatientIdChip = findViewById(R.id.tvPatientIdChip);
         TextView tvAdmittedChip = findViewById(R.id.tvAdmittedChip);
         TextView tvAlertBannerMessage = findViewById(R.id.tvAlertBannerMessage);
+        TextView tvRiskLevel = findViewById(R.id.tvRiskLevel);
         TextView tvPredictionSummary = findViewById(R.id.tvPredictionSummary);
 
         if (tvPatientNameLarge != null) {
@@ -231,6 +227,10 @@ public class PatientDetailActivity extends AppCompatActivity {
                 tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_stable));
             }
         }
+        if (tvRiskLevel != null) {
+            tvRiskLevel.setText("Risk Level: " + patientRisk);
+            tvRiskLevel.setTextColor(ContextCompat.getColor(this, getSeverityColorForMetric(patientRisk)));
+        }
 
         if (tvAlertBannerMessage != null) {
             if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
@@ -253,11 +253,13 @@ public class PatientDetailActivity extends AppCompatActivity {
 
         if (tvPredictionSummary != null) {
             if (latestPrediction != null && latestPrediction.getSummary() != null && !latestPrediction.getSummary().trim().isEmpty()) {
-                tvPredictionSummary.setText(
-                        String.format(Locale.US, "%.0f%% risk score • %s",
-                                latestPrediction.getRiskScore(),
-                                latestPrediction.getSummary())
-                );
+                String summaryText = String.format(Locale.US, "%.0f%% risk score • %s",
+                        latestPrediction.getRiskScore(),
+                        latestPrediction.getSummary());
+                if (latestPredictionFactors != null && !latestPredictionFactors.isEmpty()) {
+                    summaryText = summaryText + "\nFactors: " + joinFactors(latestPredictionFactors);
+                }
+                tvPredictionSummary.setText(summaryText);
             } else {
                 tvPredictionSummary.setText("Run prediction to generate risk insight from latest vitals.");
             }
@@ -470,25 +472,17 @@ public class PatientDetailActivity extends AppCompatActivity {
             return;
         }
 
-        RiskUtils.EvaluationResult evaluation = RiskUtils.evaluate(latestVital);
-        patientRisk = evaluation.getRiskLevel();
-
-        Prediction prediction = new Prediction(
+        LocalPredictionEngine.PredictionResult predictionResult = LocalPredictionEngine.evaluate(latestVital);
+        patientRisk = predictionResult.getRiskLevel();
+        latestPrediction = new Prediction(
                 null,
                 patientId,
-                evaluation.getRiskLevel(),
-                evaluation.getRiskScore(),
-                evaluation.getSummary(),
+                predictionResult.getRiskLevel(),
+                predictionResult.getRiskScore(),
+                predictionResult.getSummary(),
                 DateTimeUtils.now()
         );
-        long predictionId = predictionRepository.addPrediction(prediction);
-        if (predictionId <= 0) {
-            Toast.makeText(this, "Prediction save failed", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        prediction.setId(String.valueOf(predictionId));
-        latestPrediction = prediction;
-        patientRepository.updatePatientRiskLevel(id, patientRisk);
+        latestPredictionFactors = predictionResult.getFactors();
 
         heartRate = latestVital.getHeartRate();
         spo2 = latestVital.getSpo2();
@@ -496,111 +490,10 @@ public class PatientDetailActivity extends AppCompatActivity {
         respiratoryRate = latestVital.getRespiratoryRate();
         temperature = latestVital.getTemperature();
 
-        boolean alertCreated = false;
-        boolean duplicateSuppressed = false;
-        boolean notificationSent = false;
-        if (!Constants.RISK_STABLE.equalsIgnoreCase(evaluation.getRiskLevel())) {
-            AlertItem alertItem = new AlertItem(
-                    null,
-                    patientId,
-                    evaluation.getAlertType(),
-                    evaluation.getRiskLevel(),
-                    evaluation.getSummary(),
-                    DateTimeUtils.now(),
-                    buildPrimaryAlertValue(evaluation, latestVital),
-                    buildPrimaryAlertUnit(evaluation),
-                    (int) Math.round(evaluation.getRiskScore()),
-                    false
-            );
-            alertItem.setPatientName(patientName);
-            alertItem.setPatientAge(patientAge);
-            alertItem.setPatientSex(patientSex);
-            alertItem.setPatientBed(patientBed);
-            alertItem.setPatientRisk(patientRisk);
-
-            long alertId = alertRepository.addAlertIfNotRecentDuplicate(alertItem, DUPLICATE_ALERT_WINDOW_MINUTES);
-            if (alertId == -1L) {
-                duplicateSuppressed = true;
-                latestAlert = alertRepository.getLatestAlertByPatientId(id);
-            } else if (alertId > 0) {
-                alertCreated = true;
-                latestAlert = alertRepository.getAlertById((int) alertId);
-                if (latestAlert == null) {
-                    alertItem.setId(String.valueOf(alertId));
-                    latestAlert = alertItem;
-                }
-                notificationSent = NotificationHelper.showAlertNotification(this, latestAlert);
-                if (!notificationSent && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    requestNotificationPermissionIfNeeded();
-                }
-            }
-        }
-
         bindPatientHeader();
         bindVitalCards();
 
-        String toastMessage = "Prediction updated: " + patientRisk;
-        if (alertCreated) {
-            toastMessage += notificationSent ? " (alert + notification sent)" : " (alert created)";
-        } else if (duplicateSuppressed) {
-            toastMessage += " (duplicate alert suppressed)";
-        }
-        Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
-    }
-
-    private String buildPrimaryAlertValue(RiskUtils.EvaluationResult evaluation, VitalSign vitalSign) {
-        String alertType = evaluation.getAlertType().toLowerCase(Locale.US);
-        if (alertType.contains("spo2")) {
-            return String.valueOf(vitalSign.getSpo2());
-        }
-        if (alertType.contains("blood pressure")) {
-            return vitalSign.getBloodPressure();
-        }
-        if (alertType.contains("heart")) {
-            return String.valueOf(vitalSign.getHeartRate());
-        }
-        if (alertType.contains("respiratory")) {
-            return String.valueOf(vitalSign.getRespiratoryRate());
-        }
-        if (alertType.contains("fever") || alertType.contains("temperature")) {
-            return String.format(Locale.US, "%.1f", vitalSign.getTemperature());
-        }
-        return String.format(Locale.US, "%.0f", evaluation.getRiskScore());
-    }
-
-    private String buildPrimaryAlertUnit(RiskUtils.EvaluationResult evaluation) {
-        String alertType = evaluation.getAlertType().toLowerCase(Locale.US);
-        if (alertType.contains("spo2")) {
-            return "%";
-        }
-        if (alertType.contains("blood pressure")) {
-            return "mmHg";
-        }
-        if (alertType.contains("heart")) {
-            return "BPM";
-        }
-        if (alertType.contains("respiratory")) {
-            return "/min";
-        }
-        if (alertType.contains("fever") || alertType.contains("temperature")) {
-            return "C";
-        }
-        return "score";
-    }
-
-    private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            return;
-        }
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        ActivityCompat.requestPermissions(
-                this,
-                new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                REQ_POST_NOTIFICATIONS
-        );
+        Toast.makeText(this, "Local prediction updated: " + patientRisk, Toast.LENGTH_LONG).show();
     }
 
     private void acknowledgeLatestAlert() {
@@ -703,19 +596,6 @@ public class PatientDetailActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_POST_NOTIFICATIONS) {
-            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            Toast.makeText(
-                    this,
-                    granted ? "Notification permission granted" : "Notification permission denied",
-                    Toast.LENGTH_SHORT
-            ).show();
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         bindClinicalNotesHistory();
@@ -730,6 +610,19 @@ public class PatientDetailActivity extends AppCompatActivity {
         } catch (NumberFormatException ignored) {
             return -1;
         }
+    }
+
+    private String joinFactors(List<String> factors) {
+        if (factors == null || factors.isEmpty()) {
+            return "No major abnormal factors detected";
+        }
+        if (factors.size() == 1) {
+            return factors.get(0);
+        }
+        if (factors.size() == 2) {
+            return factors.get(0) + " and " + factors.get(1);
+        }
+        return factors.get(0) + ", " + factors.get(1) + ", and other abnormalities";
     }
 
     private int getSeverityColorForMetric(String risk) {
