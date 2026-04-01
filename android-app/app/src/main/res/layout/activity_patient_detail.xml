@@ -288,15 +288,24 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1" />
 
-                <!-- Temp -->
+            </GridLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/spacing_md">
+
+                <!-- Temp (centered row to balance odd-card layout) -->
                 <include
                     android:id="@+id/cardVitalTemperature"
                     layout="@layout/item_vital_metric"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_columnWeight="1" />
-
-            </GridLayout>
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintWidth_percent="0.48" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <!-- Clinical Notes Card -->
             <androidx.cardview.widget.CardView
