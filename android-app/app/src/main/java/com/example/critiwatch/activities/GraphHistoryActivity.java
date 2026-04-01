@@ -24,10 +24,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.adapters.VitalHistoryAdapter;
 import com.example.critiwatch.database.DatabaseSeeder;
-import com.example.critiwatch.database.PatientDao;
-import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.VitalSign;
+import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.repository.VitalRepository;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
@@ -70,8 +70,8 @@ public class GraphHistoryActivity extends AppCompatActivity {
     private boolean hasDateSelection;
     private boolean hasTimeSelection;
 
-    private VitalDao vitalDao;
-    private PatientDao patientDao;
+    private VitalRepository vitalRepository;
+    private PatientRepository patientRepository;
     private VitalHistoryAdapter vitalHistoryAdapter;
 
     private Spinner spinnerMetric;
@@ -96,8 +96,8 @@ public class GraphHistoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_graph_history);
 
         DatabaseSeeder.seedIfEmpty(this);
-        vitalDao = new VitalDao(this);
-        patientDao = new PatientDao(this);
+        vitalRepository = new VitalRepository(this);
+        patientRepository = new PatientRepository(this);
 
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -178,7 +178,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
             return false;
         }
 
-        Patient patient = patientDao.getPatientById(id);
+        Patient patient = patientRepository.getPatientByIdWithLatestData(id);
         if (patient != null) {
             if (patientName == null || patientName.trim().isEmpty()) {
                 patientName = patient.getName();
@@ -416,7 +416,7 @@ public class GraphHistoryActivity extends AppCompatActivity {
         allVitalHistory.clear();
         int id = parseId(patientId);
         if (id > 0) {
-            allVitalHistory.addAll(vitalDao.getVitalsByPatientId(id));
+            allVitalHistory.addAll(vitalRepository.getVitalsByPatientId(id));
         }
         applyHistoryFiltersAndRender();
     }

@@ -21,13 +21,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.Prediction;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.repository.VitalRepository;
 import com.example.critiwatch.services.DemoHistorySeeder;
 import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.services.ValidationService;
@@ -69,7 +69,7 @@ public class AddPatientActivity extends AppCompatActivity {
 
     private PatientRepository patientRepository;
     private AlertRepository alertRepository;
-    private VitalDao vitalDao;
+    private VitalRepository vitalRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +78,7 @@ public class AddPatientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_patient);
         patientRepository = new PatientRepository(this);
         alertRepository = new AlertRepository(this);
-        vitalDao = new VitalDao(this);
+        vitalRepository = new VitalRepository(this);
         NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -318,7 +318,7 @@ public class AddPatientActivity extends AppCompatActivity {
     }
 
     private int seedDemoHistoryVitals(long patientId, VitalSign currentVital, String riskLevel) {
-        if (patientId <= 0 || currentVital == null || vitalDao == null) {
+        if (patientId <= 0 || currentVital == null || vitalRepository == null) {
             return 0;
         }
 
@@ -332,7 +332,7 @@ public class AddPatientActivity extends AppCompatActivity {
 
         int insertedCount = 0;
         for (VitalSign vitalSign : historicalVitals) {
-            if (vitalDao.insertVital(vitalSign) > 0L) {
+            if (vitalRepository.addVital(vitalSign) > 0L) {
                 insertedCount++;
             }
         }

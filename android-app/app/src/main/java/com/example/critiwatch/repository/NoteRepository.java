@@ -19,6 +19,10 @@ public class NoteRepository {
         return noteDao.insertNote(note);
     }
 
+    public boolean updateNote(ClinicalNote note) {
+        return noteDao.updateNote(note) > 0;
+    }
+
     public ClinicalNote getLatestNoteByPatientId(int patientId) {
         return noteDao.getLatestNoteByPatientId(patientId);
     }

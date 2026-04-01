@@ -17,12 +17,12 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.critiwatch.database.DatabaseSeeder;
-import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.Patient;
 import com.example.critiwatch.models.VitalSign;
 import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.PatientRepository;
+import com.example.critiwatch.repository.VitalRepository;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
@@ -33,7 +33,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
 
     private AlertRepository alertRepository;
     private PatientRepository patientRepository;
-    private VitalDao vitalDao;
+    private VitalRepository vitalRepository;
 
     private String patientId;
     private String patientName;
@@ -62,7 +62,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
         DatabaseSeeder.seedIfEmpty(this);
         alertRepository = new AlertRepository(this);
         patientRepository = new PatientRepository(this);
-        vitalDao = new VitalDao(this);
+        vitalRepository = new VitalRepository(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -150,7 +150,7 @@ public class NotificationDetailActivity extends AppCompatActivity {
             patientRisk = safeOrDefault(patient.getRiskLevel(), patientRisk);
         }
 
-        latestVital = vitalDao.getLatestVitalByPatientId(id);
+        latestVital = vitalRepository.getLatestVitalByPatientId(id);
     }
 
     private void bindAlertHeader() {

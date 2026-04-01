@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.critiwatch.adapters.ClinicalNoteAdapter;
 import com.example.critiwatch.database.DatabaseSeeder;
-import com.example.critiwatch.database.VitalDao;
 import com.example.critiwatch.models.AlertItem;
 import com.example.critiwatch.models.ClinicalNote;
 import com.example.critiwatch.models.Patient;
@@ -34,6 +33,7 @@ import com.example.critiwatch.repository.AlertRepository;
 import com.example.critiwatch.repository.NoteRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
+import com.example.critiwatch.repository.VitalRepository;
 import com.example.critiwatch.services.LocalPredictionEngine;
 import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.utils.Constants;
@@ -53,7 +53,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private NoteRepository noteRepository;
     private PatientRepository patientRepository;
     private PredictionRepository predictionRepository;
-    private VitalDao vitalDao;
+    private VitalRepository vitalRepository;
 
     private String patientId;
     private String patientName;
@@ -86,7 +86,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         noteRepository = new NoteRepository(this);
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
-        vitalDao = new VitalDao(this);
+        vitalRepository = new VitalRepository(this);
         NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -148,7 +148,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         respiratoryRate = patient.getRespiratoryRate();
         temperature = patient.getTemperature();
 
-        latestVital = vitalDao.getLatestVitalByPatientId(id);
+        latestVital = vitalRepository.getLatestVitalByPatientId(id);
         if (latestVital != null) {
             heartRate = latestVital.getHeartRate();
             spo2 = latestVital.getSpo2();
@@ -483,7 +483,7 @@ public class PatientDetailActivity extends AppCompatActivity {
             return;
         }
 
-        latestVital = vitalDao.getLatestVitalByPatientId(id);
+        latestVital = vitalRepository.getLatestVitalByPatientId(id);
         if (latestVital == null) {
             Toast.makeText(this, "No vitals found. Add vitals before running prediction.", Toast.LENGTH_SHORT).show();
             return;
