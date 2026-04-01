@@ -2,6 +2,7 @@ package com.example.critiwatch;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -34,6 +35,7 @@ import com.example.critiwatch.repository.NoteRepository;
 import com.example.critiwatch.repository.PatientRepository;
 import com.example.critiwatch.repository.PredictionRepository;
 import com.example.critiwatch.services.LocalPredictionEngine;
+import com.example.critiwatch.services.NotificationHelper;
 import com.example.critiwatch.utils.Constants;
 import com.example.critiwatch.utils.DateTimeUtils;
 import com.example.critiwatch.utils.SystemUiUtils;
@@ -44,6 +46,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class PatientDetailActivity extends AppCompatActivity {
+
+    private static final int REQUEST_POST_NOTIFICATIONS = 4101;
 
     private AlertRepository alertRepository;
     private NoteRepository noteRepository;
@@ -70,6 +74,7 @@ public class PatientDetailActivity extends AppCompatActivity {
     private RecyclerView rvClinicalNotes;
     private TextView tvClinicalNotesEmpty;
     private ClinicalNoteAdapter clinicalNoteAdapter;
+    private AlertItem pendingNotificationAlert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +87,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         patientRepository = new PatientRepository(this);
         predictionRepository = new PredictionRepository(this);
         vitalDao = new VitalDao(this);
+        NotificationHelper.ensureNotificationChannel(this);
         SystemUiUtils.applySystemBarStyling(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -569,6 +575,7 @@ public class PatientDetailActivity extends AppCompatActivity {
         long insertedId = alertRepository.addAlertIfNotRecentDuplicate(predictionAlert, 15);
         if (insertedId > 0L) {
             latestAlert = alertRepository.getAlertById((int) insertedId);
+            maybeShowAlertNotification(latestAlert);
             Toast.makeText(
                     this,
                     Constants.RISK_CRITICAL.equalsIgnoreCase(riskLevel)
@@ -581,6 +588,23 @@ public class PatientDetailActivity extends AppCompatActivity {
 
         latestAlert = alertRepository.getLatestAlertByPatientId(patientDbId);
         Toast.makeText(this, "Similar active alert already exists", Toast.LENGTH_SHORT).show();
+    }
+
+    private void maybeShowAlertNotification(AlertItem alertItem) {
+        if (alertItem == null) {
+            return;
+        }
+
+        if (NotificationHelper.needsNotificationPermission()
+                && !NotificationHelper.hasNotificationPermission(this)) {
+            pendingNotificationAlert = alertItem;
+            NotificationHelper.requestNotificationPermission(this, REQUEST_POST_NOTIFICATIONS);
+            Toast.makeText(this, "Allow notifications to receive alert popups", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        pendingNotificationAlert = null;
+        NotificationHelper.showAlertNotification(this, alertItem);
     }
 
     private void acknowledgeLatestAlert() {
@@ -696,6 +720,25 @@ public class PatientDetailActivity extends AppCompatActivity {
             bindPatientHeader();
         }
         bindClinicalNotesHistory();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQUEST_POST_NOTIFICATIONS) {
+            return;
+        }
+
+        boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (!granted) {
+            Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (pendingNotificationAlert != null) {
+            NotificationHelper.showAlertNotification(this, pendingNotificationAlert);
+            pendingNotificationAlert = null;
+        }
     }
 
     private int parseId(String rawId) {
