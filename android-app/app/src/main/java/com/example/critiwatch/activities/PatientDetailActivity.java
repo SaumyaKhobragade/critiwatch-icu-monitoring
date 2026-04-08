@@ -1,6 +1,9 @@
 package com.example.critiwatch;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -713,25 +716,51 @@ public class PatientDetailActivity extends AppCompatActivity {
     private void callRelatives() {
         Intent dialIntent = new Intent(Intent.ACTION_DIAL);
         dialIntent.setData(Uri.parse("tel:8806693379"));
-        if (dialIntent.resolveActivity(getPackageManager()) != null) {
+        try {
             startActivity(dialIntent);
-        } else {
-            Toast.makeText(this, "No dialer app found", Toast.LENGTH_SHORT).show();
+        } catch (ActivityNotFoundException exception) {
+            copyTextToClipboard("Relative contact", "8806693379");
+            Toast.makeText(this, "No dialer app found. Number copied to clipboard.", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void sharePatientDetailsViaEmail() {
+        String subject = "Patient Update: " + patientName + " (" + patientId + ")";
+        String body = buildPatientDetailsEmailBody();
+
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
         emailIntent.setData(Uri.parse("mailto:"));
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Patient Update: " + patientName + " (" + patientId + ")");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, buildPatientDetailsEmailBody());
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, body);
 
-        Intent chooser = Intent.createChooser(emailIntent, "Share via Email");
-        if (emailIntent.resolveActivity(getPackageManager()) != null) {
-            startActivity(chooser);
-        } else {
-            Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
+        try {
+            startActivity(Intent.createChooser(emailIntent, "Share via Email"));
+            return;
+        } catch (ActivityNotFoundException ignored) {
+            // Fallback for emulators/devices without a dedicated email app.
         }
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, body);
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Share Patient Details"));
+            Toast.makeText(this, "No email app found. Opened share options instead.", Toast.LENGTH_SHORT).show();
+        } catch (ActivityNotFoundException exception) {
+            copyTextToClipboard("Patient details", body);
+            Toast.makeText(this, "No email/share app found. Details copied to clipboard.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void copyTextToClipboard(String label, String text) {
+        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (clipboardManager == null) {
+            return;
+        }
+        ClipData clipData = ClipData.newPlainText(label, text);
+        clipboardManager.setPrimaryClip(clipData);
     }
 
     private String buildPatientDetailsEmailBody() {
