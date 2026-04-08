@@ -394,7 +394,23 @@
                     style="@style/Widget.CritiWatch.Button.Danger"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
+                    android:layout_marginBottom="@dimen/spacing_md"
                     android:text="Activate Rapid Response" />
+
+                <Button
+                    android:id="@+id/btnCallRelatives"
+                    style="@style/Widget.CritiWatch.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    android:text="Call Relatives" />
+
+                <Button
+                    android:id="@+id/btnSharePatientDetails"
+                    style="@style/Widget.CritiWatch.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height"
+                    android:text="Share Details via Email" />
             </LinearLayout>
 
         </LinearLayout>

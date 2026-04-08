@@ -3,6 +3,7 @@ package com.example.critiwatch;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -395,6 +396,16 @@ public class PatientDetailActivity extends AppCompatActivity {
             btnAddClinicalNote.setOnClickListener(v -> showAddClinicalNoteDialog());
         }
 
+        Button btnCallRelatives = findViewById(R.id.btnCallRelatives);
+        if (btnCallRelatives != null) {
+            btnCallRelatives.setOnClickListener(v -> callRelatives());
+        }
+
+        Button btnSharePatientDetails = findViewById(R.id.btnSharePatientDetails);
+        if (btnSharePatientDetails != null) {
+            btnSharePatientDetails.setOnClickListener(v -> sharePatientDetailsViaEmail());
+        }
+
         View llAlertBanner = findViewById(R.id.llAlertBanner);
         if (llAlertBanner != null) {
             llAlertBanner.setOnClickListener(v -> openAlertDetail());
@@ -697,6 +708,52 @@ public class PatientDetailActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    private void callRelatives() {
+        Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+        dialIntent.setData(Uri.parse("tel:8806693379"));
+        if (dialIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(dialIntent);
+        } else {
+            Toast.makeText(this, "No dialer app found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void sharePatientDetailsViaEmail() {
+        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Patient Update: " + patientName + " (" + patientId + ")");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, buildPatientDetailsEmailBody());
+
+        Intent chooser = Intent.createChooser(emailIntent, "Share via Email");
+        if (emailIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(chooser);
+        } else {
+            Toast.makeText(this, "No email app found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String buildPatientDetailsEmailBody() {
+        String predictionSummary = latestPrediction != null
+                && latestPrediction.getSummary() != null
+                && !latestPrediction.getSummary().trim().isEmpty()
+                ? latestPrediction.getSummary()
+                : "No prediction has been run yet.";
+
+        return "Patient Details\n\n"
+                + "Name: " + patientName + "\n"
+                + "Patient ID: " + patientId + "\n"
+                + "Age/Sex: " + patientAge + " / " + patientSex + "\n"
+                + "Bed: " + patientBed + "\n"
+                + "Risk Level: " + patientRisk + "\n\n"
+                + "Latest Vitals\n"
+                + "Heart Rate: " + heartRate + " bpm\n"
+                + "SpO2: " + spo2 + "%\n"
+                + "Blood Pressure: " + bloodPressure + " mmHg\n"
+                + "Respiratory Rate: " + respiratoryRate + " /min\n"
+                + "Temperature: " + String.format(Locale.US, "%.1f", temperature) + " C\n\n"
+                + "Prediction Summary: " + predictionSummary + "\n";
     }
 
     @Override
